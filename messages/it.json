@@ -1,0 +1,39 @@
+{
+  "Hello": "Ciao, Mondo!",
+  "Metadata": {
+    "title": "Hireflow",
+    "description": "Hireflow è una grande app."
+  },
+  "Auth": {
+    "signIn": {
+      "title": "Accedi",
+      "description": "Accedi al tuo account",
+      "submit": "Accedi",
+      "submitting": "Accesso in corso...",
+      "footerText": "Non hai un account?",
+      "footerLink": "Registrati"
+    },
+    "signUp": {
+      "title": "Registrati",
+      "description": "Crea un nuovo account",
+      "submit": "Registrati",
+      "submitting": "Registrazione in corso...",
+      "footerText": "Hai già un account?",
+      "footerLink": "Accedi"
+    },
+    "common": {
+      "email": "Email",
+      "password": "Password",
+      "emailPlaceholder": "Inserisci la tua email",
+      "passwordPlaceholder": "Inserisci la tua password",
+      "name": "Nome",
+      "namePlaceholder": "Inserisci il tuo nome"
+    }
+  },
+  "Forbidden": {
+    "title": "403 Accesso Negato",
+    "description": "Non hai i permessi per accedere a questa risorsa. Contatta l'amministratore se ritieni che sia un errore.",
+    "goHome": "Vai alla Home",
+    "goDashboard": "Vai alla Dashboard"
+  }
+}

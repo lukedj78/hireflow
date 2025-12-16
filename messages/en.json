@@ -1,0 +1,39 @@
+{
+  "Hello": "Hello, World!",
+  "Metadata": {
+    "title": "Hireflow",
+    "description": "Hireflow is a great app."
+  },
+  "Auth": {
+    "signIn": {
+      "title": "Sign In",
+      "description": "Sign in to your account",
+      "submit": "Sign In",
+      "submitting": "Signing In...",
+      "footerText": "Don't have an account?",
+      "footerLink": "Sign Up"
+    },
+    "signUp": {
+      "title": "Sign Up",
+      "description": "Create a new account",
+      "submit": "Sign Up",
+      "submitting": "Signing Up...",
+      "footerText": "Already have an account?",
+      "footerLink": "Sign In"
+    },
+    "common": {
+      "email": "Email",
+      "password": "Password",
+      "emailPlaceholder": "Enter your email",
+      "passwordPlaceholder": "Enter your password",
+      "name": "Name",
+      "namePlaceholder": "Enter your name"
+    }
+  },
+  "Forbidden": {
+    "title": "403 Forbidden",
+    "description": "You do not have permission to access this resource. Please contact your administrator if you believe this is a mistake.",
+    "goHome": "Go Home",
+    "goDashboard": "Go to Dashboard"
+  }
+}

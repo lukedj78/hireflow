@@ -1,0 +1,26 @@
+{
+  "LoginForm": {
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "submitButton": "Accedi",
+    "invalidEmail": "Indirizzo email non valido.",
+    "passwordTooShort": "La password deve contenere almeno 6 caratteri."
+  },
+  "SignupForm": {
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "confirmPasswordLabel": "Conferma Password",
+    "submitButton": "Registrati",
+    "passwordsDoNotMatch": "Le password non corrispondono."
+  },
+  "Auth": {
+    "signInTitle": "Bentornato",
+    "signInDescription": "Inserisci la tua email e password per accedere al tuo account.",
+    "signUpTitle": "Crea un account",
+    "signUpDescription": "Inserisci i tuoi dati per creare un nuovo account.",
+    "noAccount": "Non hai un account?",
+    "alreadyHaveAccount": "Hai già un account?",
+    "signInLink": "Accedi",
+    "signUpLink": "Registrati"
+  }
+}

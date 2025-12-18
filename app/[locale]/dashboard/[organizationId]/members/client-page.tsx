@@ -41,6 +41,7 @@ import {
 
 import { removeMemberAction, updateMemberRoleAction, inviteMemberAction } from "@/lib/server/organization-actions"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 export interface Member {
   id: string
@@ -62,7 +63,7 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
   const [inviteRole, setInviteRole] = useState("member")
   const [isInviting, setIsInviting] = useState(false)
   const router = useRouter()
-  
+
   const handleRemoveMember = async (memberId: string) => {
     if (!activeOrgId) return
     try {
@@ -182,13 +183,17 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
               <TableRow key={member.id}>
                 <TableCell>
                   <div className="flex items-center gap-3">
+
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={member.user.image || ""} />
                       <AvatarFallback>{member.user.name?.charAt(0)}</AvatarFallback>
                     </Avatar>
+
                     <div className="flex flex-col">
-                      <span className="font-medium">{member.user.name}</span>
-                      <span className="text-xs text-muted-foreground">{member.user.email}</span>
+                      <Link href={`/dashboard/${activeOrgId}/members/${member.id}`}>
+                        <span className="font-medium">{member.user.name}</span>
+                        <span className="text-xs text-muted-foreground">{member.user.email}</span>
+                      </Link>
                     </div>
                   </div>
                 </TableCell>
@@ -206,6 +211,9 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
                       <DotsThreeIcon className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => router.push(`/dashboard/${activeOrgId}/members/${member.id}`)}>
+                        View Details
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "admin")}>
                         Make Admin
                       </DropdownMenuItem>

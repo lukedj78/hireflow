@@ -194,6 +194,19 @@ export async function setActiveOrganizationAction(organizationId: string) {
     })
 }
 
+export const getOrganizationMemberAction = cache(async (organizationId: string, memberId: string) => {
+    const member = await db.query.organizationMember.findFirst({
+        where: and(
+            eq(memberSchema.id, memberId),
+            eq(memberSchema.organizationId, organizationId)
+        ),
+        with: {
+            user: true
+        }
+    });
+    return member;
+});
+
 export async function createTeamAction(data: {
     organizationId: string;
     name: string;

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { PageLayout } from "@/components/page-layout"
+import { BellRingingIcon, BriefcaseIcon, EnvelopeIcon } from "@phosphor-icons/react/dist/ssr"
 
 export default function CandidateSettingsPage() {
   return (
@@ -36,28 +37,55 @@ export default function CandidateSettingsPage() {
                         Configure when you want to receive emails.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between space-x-2">
-                        <Label htmlFor="new-jobs" className="flex flex-col space-y-1">
-                            <span>New Job Alerts</span>
-                            <span className="font-normal text-xs text-muted-foreground">Receive emails when new jobs match your profile.</span>
-                        </Label>
+                <CardContent className="grid gap-6">
+                    <div className="flex items-center justify-between space-x-4">
+                        <div className="flex items-start space-x-4">
+                            <div className="mt-1 p-2 bg-muted rounded-full">
+                                <BriefcaseIcon className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="new-jobs" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    New Job Alerts
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Receive emails when new jobs match your profile.
+                                </p>
+                            </div>
+                        </div>
                         <Switch id="new-jobs" />
                     </div>
                     <Separator />
-                    <div className="flex items-center justify-between space-x-2">
-                        <Label htmlFor="app-updates" className="flex flex-col space-y-1">
-                            <span>Application Updates</span>
-                            <span className="font-normal text-xs text-muted-foreground">Receive emails when the status of your application changes.</span>
-                        </Label>
+                    <div className="flex items-center justify-between space-x-4">
+                        <div className="flex items-start space-x-4">
+                            <div className="mt-1 p-2 bg-muted rounded-full">
+                                <BellRingingIcon className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="app-updates" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Application Updates
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Receive emails when the status of your application changes.
+                                </p>
+                            </div>
+                        </div>
                         <Switch id="app-updates" defaultChecked />
                     </div>
                     <Separator />
-                     <div className="flex items-center justify-between space-x-2">
-                        <Label htmlFor="marketing" className="flex flex-col space-y-1">
-                            <span>Marketing Emails</span>
-                            <span className="font-normal text-xs text-muted-foreground">Receive news and special offers.</span>
-                        </Label>
+                     <div className="flex items-center justify-between space-x-4">
+                        <div className="flex items-start space-x-4">
+                            <div className="mt-1 p-2 bg-muted rounded-full">
+                                <EnvelopeIcon className="h-5 w-5 text-primary" />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="marketing" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                    Marketing Emails
+                                </Label>
+                                <p className="text-sm text-muted-foreground">
+                                    Receive news and special offers.
+                                </p>
+                            </div>
+                        </div>
                         <Switch id="marketing" />
                     </div>
                 </CardContent>

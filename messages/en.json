@@ -35,5 +35,32 @@
     "description": "You do not have permission to access this resource. Please contact your administrator if you believe this is a mistake.",
     "goHome": "Go Home",
     "goDashboard": "Go to Dashboard"
+  },
+  "Jobs": {
+    "title": "Jobs",
+    "description": "Manage your job postings here.",
+    "create": "Create Job",
+    "edit": "Edit",
+    "delete": "Delete",
+    "list": {
+      "title": "Job Postings",
+      "empty": "No job postings found.",
+      "createFirst": "Create your first job posting."
+    },
+    "form": {
+      "title": "Title",
+      "slug": "Slug",
+      "location": "Location",
+      "type": "Type",
+      "salaryMin": "Min Salary",
+      "salaryMax": "Max Salary",
+      "currency": "Currency",
+      "description": "Description",
+      "submit": "Save Job",
+      "submitting": "Saving...",
+      "remote": "Remote",
+      "onsite": "On-site",
+      "hybrid": "Hybrid"
+    }
   }
 }

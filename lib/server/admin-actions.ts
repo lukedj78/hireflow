@@ -6,7 +6,7 @@ import { APIError } from "better-auth/api";
 import { db } from "@/lib/db";
 import { account, user, organization, team } from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
-import { globalAdminRole } from "@/lib/permissions";
+import { adminRole } from "@/lib/permissions";
 import { cache } from "react";
 
 async function checkAdminPermission(permission: Record<string, string[]>) {
@@ -17,7 +17,7 @@ async function checkAdminPermission(permission: Record<string, string[]>) {
         throw new APIError("FORBIDDEN", { message: "You must be an admin to perform this action" });
     }
 
-    const authorization = globalAdminRole.authorize(permission as Parameters<typeof globalAdminRole.authorize>[0]);
+    const authorization = adminRole.authorize(permission as Parameters<typeof adminRole.authorize>[0]);
     if (!authorization.success) {
         throw new APIError("FORBIDDEN", { message: "Permission denied" });
     }

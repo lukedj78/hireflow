@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Users, Building2, ShieldCheck, CreditCard } from "lucide-react";
+import { UsersIcon, BuildingsIcon, ShieldCheckIcon, CreditCardIcon } from "@phosphor-icons/react/dist/ssr";
 
 export default async function AdminDashboardPage() {
     const stats = await getAdminStatsAction();
@@ -21,7 +21,7 @@ export default async function AdminDashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <UsersIcon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.users}</div>
@@ -33,7 +33,7 @@ export default async function AdminDashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Organizations</CardTitle>
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <BuildingsIcon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.organizations}</div>
@@ -45,7 +45,7 @@ export default async function AdminDashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Teams</CardTitle>
-                        <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                        <ShieldCheckIcon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.teams}</div>
@@ -57,7 +57,7 @@ export default async function AdminDashboardPage() {
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">Premium Users</CardTitle>
-                        <CreditCard className="h-4 w-4 text-muted-foreground" />
+                        <CreditCardIcon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{stats.premiumUsers}</div>

@@ -2,7 +2,7 @@ import { createAuthClient } from "better-auth/react";
 import { adminClient } from "better-auth/client/plugins";
 import { organizationClient } from "better-auth/client/plugins";
 import { polarClient } from "@polar-sh/better-auth";
-import { ac, adminRole, userRole, myCustomRole, orgOwnerRole, orgAdminRole, orgMemberRole } from "./permissions";
+import { ac, adminRole, userRole, businessRole, candidateRole, orgOwnerRole, orgAdminRole, orgMemberRole, orgHRRole } from "./permissions";
 
 export const authClient = createAuthClient({
     plugins: [
@@ -11,7 +11,8 @@ export const authClient = createAuthClient({
             roles: {
                 user: userRole,
                 admin: adminRole,
-                myCustomRole
+                business: businessRole,
+                candidate: candidateRole
             }
         }),
         organizationClient({
@@ -19,7 +20,8 @@ export const authClient = createAuthClient({
             roles: {
                 owner: orgOwnerRole,
                 admin: orgAdminRole,
-                member: orgMemberRole
+                member: orgMemberRole,
+                hr: orgHRRole
             },
             teams: {
                 enabled: true

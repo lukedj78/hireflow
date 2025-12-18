@@ -15,7 +15,8 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { ChevronRight, type LucideIcon } from "lucide-react"
+import { CaretRightIcon } from "@phosphor-icons/react"
+import { type Icon } from "@phosphor-icons/react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -25,7 +26,7 @@ export function NavMain({
   items: {
     title: string
     url: string
-    icon?: LucideIcon
+    icon?: Icon
     isActive?: boolean
     items?: {
       title: string
@@ -55,7 +56,7 @@ export function NavMain({
                   >
                     {item.icon && <item.icon />}
                     <span>{item.title}</span>
-                    <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                    <CaretRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                   </SidebarMenuButton>
                 }
               />

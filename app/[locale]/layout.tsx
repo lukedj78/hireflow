@@ -3,6 +3,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider"
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getTranslations } from 'next-intl/server';
+import { TailwindIndicator } from '@/components/tailwind-indicator';
+import GDPRProvider from '@/components/gdpr/GDPR-provider';
+import GTM from '@/components/GTM';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import "../globals.css";
@@ -17,9 +20,9 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export async function generateMetadata({params}: {params: Promise<{locale: string}>}) {
-  const {locale} = await params;
-  const t = await getTranslations({locale, namespace: 'Metadata'});
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'Metadata' });
 
   return {
     title: t('title'),
@@ -37,7 +40,7 @@ export default async function RootLayout({
   }
 }>) {
 
-  const {locale} = await params;
+  const { locale } = await params;
 
   // Ensure that the incoming `locale` is valid
   const isValidLocale = routing.locales.some((cur) => cur === locale);
@@ -58,8 +61,12 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
-            <Toaster />
+            <GDPRProvider>
+              <GTM />
+              {children}
+              <Toaster />
+              <TailwindIndicator />
+            </GDPRProvider>
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ChevronsUpDown, Plus } from "lucide-react"
+import { CaretUpDownIcon, PlusIcon } from "@phosphor-icons/react"
 
 import {
   DropdownMenu,
@@ -33,7 +33,7 @@ export function OrgSwitcher() {
     await authClient.organization.setActive({
       organizationId: orgId
     })
-    router.refresh()
+    router.push(`/dashboard/${orgId}`)
   }
 
   return (
@@ -57,7 +57,7 @@ export function OrgSwitcher() {
                   {currentOrg?.slug || "No organization"}
                 </span>
               </div>
-              <ChevronsUpDown className="ml-auto" />
+              <CaretUpDownIcon className="ml-auto" />
             </SidebarMenuButton>
           }/>
           <DropdownMenuContent
@@ -90,7 +90,7 @@ export function OrgSwitcher() {
             <DropdownMenuGroup>
               <DropdownMenuItem className="gap-2 p-2" onClick={() => router.push("/dashboard/organization/create")}>
                 <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-                  <Plus className="size-4" />
+                  <PlusIcon className="size-4" />
                 </div>
                 <div className="font-medium text-muted-foreground">Add Organization</div>
               </DropdownMenuItem>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import {  Ban, Key, UserCheck, Trash2, Unplug } from "lucide-react"
+import { ProhibitIcon, KeyIcon, UserCheckIcon, TrashIcon, LinkBreakIcon } from "@phosphor-icons/react"
 import {
     Dialog,
     DialogContent,
@@ -141,21 +141,21 @@ export default function AdminUsersClientPage({ initialUsers: users }: { initialU
                                 <TableCell className="flex gap-2">
                                     {user.banned ? (
                                         <Button variant="ghost" size="icon" onClick={() => handleUnban(user.id)} title="Unban">
-                                            <UserCheck className="h-4 w-4" />
+                                            <UserCheckIcon className="h-4 w-4" />
                                         </Button>
                                     ) : (
                                         <Button variant="ghost" size="icon" onClick={() => handleBan(user.id)} title="Ban">
-                                            <Ban className="h-4 w-4 text-orange-500" />
+                                            <ProhibitIcon className="h-4 w-4 text-orange-500" />
                                         </Button>
                                     )}
                                     <Button variant="ghost" size="icon" onClick={() => handleImpersonate(user.id)} title="Impersonate">
-                                        <Key className="h-4 w-4" />
+                                        <KeyIcon className="h-4 w-4" />
                                     </Button>
                                     <Button variant="ghost" size="icon" onClick={() => handleViewAccounts(user)} title="Unlink Accounts">
-                                        <Unplug className="h-4 w-4" />
+                                        <LinkBreakIcon className="h-4 w-4" />
                                     </Button>
                                     <Button variant="ghost" size="icon" onClick={() => handleRemove(user.id)} title="Delete">
-                                        <Trash2 className="h-4 w-4 text-red-500" />
+                                        <TrashIcon className="h-4 w-4 text-red-500" />
                                     </Button>
                                 </TableCell>
                             </TableRow>

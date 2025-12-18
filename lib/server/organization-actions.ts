@@ -3,8 +3,8 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { organizationMember as memberSchema } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { organizationMember as memberSchema, organization, jobPosting } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { orgOwnerRole, orgAdminRole, orgMemberRole } from "@/lib/permissions";
 import { APIError } from "better-auth/api";
 import { cache } from "react";
@@ -18,6 +18,15 @@ export const getActiveOrganizationAction = cache(async () => {
     return await auth.api.getFullOrganization({
         query: {
             organizationId: session.session.activeOrganizationId
+        },
+        headers: await headers()
+    });
+});
+
+export const getOrganizationAction = cache(async (organizationId: string) => {
+    return await auth.api.getFullOrganization({
+        query: {
+            organizationId
         },
         headers: await headers()
     });
@@ -89,11 +98,30 @@ export async function createOrganizationAction(data: {
 
 export async function checkOrganizationSlugAction(slug: string) {
   return await auth.api.checkOrganizationSlug({
-    body: {
-      slug,
-    },
-    headers: await headers(),
+    body: { slug },
+    headers: await headers()
   });
+}
+
+export async function getPublicOrganizationBySlug(slug: string) {
+    const org = await db.query.organization.findFirst({
+        where: eq(organization.slug, slug),
+    });
+
+    if (!org) return undefined;
+
+    const jobs = await db.query.jobPosting.findMany({
+        where: and(
+            eq(jobPosting.organizationId, org.id),
+            eq(jobPosting.status, "published")
+        ),
+        orderBy: [desc(jobPosting.createdAt)]
+    });
+
+    return {
+        ...org,
+        jobPostings: jobs
+    };
 }
 
 export const listOrganizationsAction = cache(async (query?: {

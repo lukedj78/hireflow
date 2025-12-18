@@ -2,10 +2,10 @@
 
 import * as React from "react"
 import {
-  LayoutDashboard,
-  ShieldCheck,
-  Settings
-} from "lucide-react"
+  LayoutIcon,
+  ShieldCheckIcon,
+  GearIcon
+} from "@phosphor-icons/react"
 
 import Link from "next/link"
 import { NavMain } from "@/components/dashboard/nav-main"
@@ -29,7 +29,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     {
       title: "Dashboard",
       url: "/admin",
-      icon: LayoutDashboard,
+      icon: LayoutIcon,
       isActive: true,
       items: [
         {
@@ -41,7 +41,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     {
       title: "Management",
       url: "/admin/users",
-      icon: ShieldCheck,
+      icon: ShieldCheckIcon,
       items: [
         {
           title: "Users",
@@ -56,7 +56,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     {
         title: "Settings",
         url: "/admin/settings",
-        icon: Settings,
+        icon: GearIcon,
         items: [
             {
                 title: "General",
@@ -74,7 +74,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
             <SidebarMenuButton size="lg" render={
               <Link href="/admin">
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <ShieldCheck className="size-4" />
+                  <ShieldCheckIcon className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">Admin Panel</span>

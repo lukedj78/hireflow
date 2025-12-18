@@ -35,5 +35,32 @@
     "description": "Non hai i permessi per accedere a questa risorsa. Contatta l'amministratore se ritieni che sia un errore.",
     "goHome": "Vai alla Home",
     "goDashboard": "Vai alla Dashboard"
+  },
+  "Jobs": {
+    "title": "Annunci di Lavoro",
+    "description": "Gestisci i tuoi annunci di lavoro qui.",
+    "create": "Crea Annuncio",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "list": {
+      "title": "Annunci di Lavoro",
+      "empty": "Nessun annuncio trovato.",
+      "createFirst": "Crea il tuo primo annuncio di lavoro."
+    },
+    "form": {
+      "title": "Titolo",
+      "slug": "Slug",
+      "location": "Luogo",
+      "type": "Tipo",
+      "salaryMin": "Salario Min",
+      "salaryMax": "Salario Max",
+      "currency": "Valuta",
+      "description": "Descrizione",
+      "submit": "Salva Annuncio",
+      "submitting": "Salvataggio...",
+      "remote": "Remoto",
+      "onsite": "In sede",
+      "hybrid": "Ibrido"
+    }
   }
 }

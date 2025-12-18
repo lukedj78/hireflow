@@ -18,7 +18,7 @@ import {
 import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { Loader2 } from "lucide-react"
+import { SpinnerGap } from "@phosphor-icons/react"
 import { ForbiddenError } from "@/components/forbidden-error"
 
 export default function AdminLayout({
@@ -38,7 +38,7 @@ export default function AdminLayout({
   if (isPending) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <SpinnerGap className="h-8 w-8 animate-spin" />
       </div>
     )
   }

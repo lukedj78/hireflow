@@ -8,7 +8,7 @@ import { sendEmail } from "./email";
 import VerificationEmail from "@/emails/verification-email";
 import ResetPasswordEmail from "@/emails/reset-password-email";
 import InvitationEmail from "@/emails/invitation-email";
-import { ac, adminRole, userRole, myCustomRole, orgOwnerRole, orgAdminRole, orgMemberRole } from "./permissions";
+import { ac, adminRole, userRole, businessRole, candidateRole, orgOwnerRole, orgAdminRole, orgMemberRole, orgHRRole } from "./permissions";
 import { admin } from "better-auth/plugins";
 import { organization } from "better-auth/plugins";
 import { APIError } from "better-auth/api";
@@ -68,7 +68,8 @@ export const auth = betterAuth({
       roles: {
           user: userRole,
           admin: adminRole,
-          myCustomRole
+          business: businessRole,
+          candidate: candidateRole
       }
     }),
     organization({
@@ -76,7 +77,8 @@ export const auth = betterAuth({
       roles: {
           owner: orgOwnerRole,
           admin: orgAdminRole,
-          member: orgMemberRole
+          member: orgMemberRole,
+          hr: orgHRRole
       },
       async sendInvitationEmail(data) {
         const inviteLink = `${process.env.NEXT_PUBLIC_BETTER_AUTH_URL}/accept-invitation/${data.id}`;
@@ -199,6 +201,9 @@ export const auth = betterAuth({
     polar({
       client: polarClient,
       createCustomerOnSignUp: true,
+      portal: {
+        enabled: true
+      },
       use: [
         checkout({
           products: [

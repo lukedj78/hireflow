@@ -1,0 +1,1 @@
+ALTER TABLE application ADD COLUMN ai_analysis text;

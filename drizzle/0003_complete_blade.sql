@@ -1,0 +1,1 @@
+ALTER TABLE `application` ADD `ai_analysis` text;

@@ -3,6 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { signUp } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -94,9 +95,9 @@ export default function SignUpPage() {
             </Button>
             <p className="text-center text-sm text-muted-foreground">
               {t('signUp.footerText')}{" "}
-              <a href="/auth/sign-in" className="text-primary hover:underline">
+              <Link href="/auth/sign-in" className="text-primary hover:underline">
                 {t('signUp.footerLink')}
-              </a>
+              </Link>
             </p>
           </form>
         </CardContent>

@@ -191,8 +191,8 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
 
                     <div className="flex flex-col">
                       <Link href={`/dashboard/${activeOrgId}/members/${member.id}`}>
-                        <span className="font-medium">{member.user.name}</span>
-                        <span className="text-xs text-muted-foreground">{member.user.email}</span>
+                        <p className="font-medium">{member.user.name}</p>
+                        <p className="text-xs text-muted-foreground">{member.user.email}</p>
                       </Link>
                     </div>
                   </div>

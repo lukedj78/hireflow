@@ -46,7 +46,7 @@ async function checkOrgPermission(organizationId: string, permission: Record<str
     });
 
     if (!currentMember) {
-         throw new APIError("FORBIDDEN", { message: "Not a member of this organization" });
+         throw new APIError("FORBIDDEN", { message: "Unauthorized" });
     }
 
     const roleMap = {

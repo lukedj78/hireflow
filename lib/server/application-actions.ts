@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { application, candidate, jobPosting } from "@/lib/db/schema";
+import { application, candidate, jobPosting, organizationMember } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { triggerWorkflow } from "@/lib/events";
@@ -11,14 +11,19 @@ import { revalidatePath } from "next/cache";
 
 export type SubmitApplicationData = {
     jobSlug: string;
-    name: string;
-    email: string;
-    phone: string;
-    resumeUrl: string; // URL or text for now
+    resumeUrl?: string;
+    resumeBase64?: string;
+    resumeFileName?: string;
 };
 
 export async function submitApplicationAction(data: SubmitApplicationData) {
-    // 1. Find the job
+    // 1. Verify Authentication
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) {
+        throw new Error("You must be logged in to apply");
+    }
+
+    // 2. Find the job
     const job = await db.query.jobPosting.findFirst({
         where: eq(jobPosting.slug, data.jobSlug),
     });
@@ -31,25 +36,41 @@ export async function submitApplicationAction(data: SubmitApplicationData) {
         throw new Error("Job is not accepting applications");
     }
 
-    // 2. Find or create candidate
-    let existingCandidate = await db.query.candidate.findFirst({
-        where: eq(candidate.email, data.email),
+    // 3. Find candidate profile associated with user
+    const existingCandidate = await db.query.candidate.findFirst({
+        where: eq(candidate.userId, session.user.id),
     });
 
     if (!existingCandidate) {
-        const [newCandidate] = await db.insert(candidate).values({
-            id: nanoid(),
-            name: data.name,
-            email: data.email,
-            phone: data.phone,
-            resumeUrl: data.resumeUrl,
-        }).returning();
-        existingCandidate = newCandidate;
-    } else {
-        // Optional: Update candidate info
+        throw new Error("Candidate profile not found. Please complete onboarding as a candidate.");
     }
 
-    // 3. Check if already applied
+    const now = new Date();
+    let shouldUpdateResumeDate = false;
+
+    // 4. Update resume if provided
+    // If a file is uploaded (resumeBase64) or a new URL is provided
+    if (data.resumeUrl && data.resumeUrl !== existingCandidate.resumeUrl) {
+        await db.update(candidate)
+            .set({ 
+                resumeUrl: data.resumeUrl,
+                resumeLastUpdatedAt: now
+            })
+            .where(eq(candidate.id, existingCandidate.id));
+        shouldUpdateResumeDate = true;
+    }
+    
+    // If a file is uploaded, we update the timestamp too
+    if (data.resumeBase64) {
+         await db.update(candidate)
+            .set({ 
+                resumeLastUpdatedAt: now
+            })
+            .where(eq(candidate.id, existingCandidate.id));
+        shouldUpdateResumeDate = true;
+    }
+
+    // 5. Check if already applied
     const existingApplication = await db.query.application.findFirst({
         where: and(
             eq(application.jobPostingId, job.id),
@@ -61,7 +82,7 @@ export async function submitApplicationAction(data: SubmitApplicationData) {
         throw new Error("You have already applied for this job");
     }
 
-    // 4. Create application
+    // 6. Create application
     const [newApplication] = await db.insert(application).values({
         id: nanoid(),
         jobPostingId: job.id,
@@ -74,9 +95,105 @@ export async function submitApplicationAction(data: SubmitApplicationData) {
         application: newApplication,
         candidate: existingCandidate,
         job,
+        resume: {
+            url: data.resumeUrl,
+            fileName: data.resumeFileName,
+            content: data.resumeBase64, // Base64 encoded file content
+        }
     });
 
     return { success: true };
+}
+
+export async function updateApplicationStatusAction(applicationId: string, status: "applied" | "screening" | "interview" | "offer" | "hired" | "rejected") {
+    try {
+        const session = await auth.api.getSession({ headers: await headers() });
+        if (!session) {
+            throw new Error("Unauthorized");
+        }
+
+        const app = await db.query.application.findFirst({
+            where: eq(application.id, applicationId),
+            with: {
+                jobPosting: true
+            }
+        });
+
+        if (!app) {
+            throw new Error("Application not found");
+        }
+
+        // Verify membership
+        const membership = await db.query.organizationMember.findFirst({
+            where: and(
+                eq(organizationMember.organizationId, app.jobPosting.organizationId),
+                eq(organizationMember.userId, session.user.id)
+            )
+        });
+
+        if (!membership) {
+            throw new Error("You are not authorized to update this application");
+        }
+
+        const [updatedApp] = await db.update(application)
+            .set({ status })
+            .where(eq(application.id, applicationId))
+            .returning();
+
+        // Trigger workflow event
+        await triggerWorkflow("application.status_updated", {
+            application: updatedApp,
+            previousStatus: app.status
+        });
+
+        revalidatePath(`/dashboard/${app.jobPosting.organizationId}/jobs/${app.jobPosting.id}/applications`);
+        revalidatePath(`/dashboard/${app.jobPosting.organizationId}/jobs/${app.jobPosting.id}/pipeline`);
+        
+        return { success: true, data: updatedApp };
+    } catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    }
+}
+
+export async function deleteApplicationAction(applicationId: string) {
+    try {
+        const session = await auth.api.getSession({ headers: await headers() });
+        if (!session) {
+            throw new Error("Unauthorized");
+        }
+
+        const app = await db.query.application.findFirst({
+            where: eq(application.id, applicationId),
+            with: {
+                jobPosting: true
+            }
+        });
+
+        if (!app) {
+            throw new Error("Application not found");
+        }
+
+        // Verify membership
+        const membership = await db.query.organizationMember.findFirst({
+            where: and(
+                eq(organizationMember.organizationId, app.jobPosting.organizationId),
+                eq(organizationMember.userId, session.user.id)
+            )
+        });
+
+        if (!membership) {
+            throw new Error("You are not authorized to delete this application");
+        }
+
+        await db.delete(application).where(eq(application.id, applicationId));
+
+        revalidatePath(`/dashboard/${app.jobPosting.organizationId}/jobs/${app.jobPosting.id}/applications`);
+        revalidatePath(`/dashboard/${app.jobPosting.organizationId}/jobs/${app.jobPosting.id}/pipeline`);
+
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+    }
 }
 
 export async function getJobApplicationsAction(jobId: string) {
@@ -85,6 +202,7 @@ export async function getJobApplicationsAction(jobId: string) {
         throw new Error("Unauthorized");
     }
 
+    // Verify membership for the job's organization
     const job = await db.query.jobPosting.findFirst({
         where: eq(jobPosting.id, jobId),
     });
@@ -93,12 +211,11 @@ export async function getJobApplicationsAction(jobId: string) {
         throw new Error("Job not found");
     }
 
-    const membership = await auth.api.getActiveMember({
-        query: {
-            organizationId: job.organizationId,
-            userId: session.user.id
-        },
-        headers: await headers()
+    const membership = await db.query.organizationMember.findFirst({
+        where: and(
+            eq(organizationMember.organizationId, job.organizationId),
+            eq(organizationMember.userId, session.user.id)
+        )
     });
 
     if (!membership) {
@@ -116,52 +233,6 @@ export async function getJobApplicationsAction(jobId: string) {
     return applications;
 }
 
-export async function updateApplicationStatusAction(applicationId: string, status: "applied" | "screening" | "interview" | "offer" | "hired" | "rejected") {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) {
-        throw new Error("Unauthorized");
-    }
-
-    const app = await db.query.application.findFirst({
-        where: eq(application.id, applicationId),
-        with: {
-            jobPosting: true,
-        }
-    });
-
-    if (!app) {
-        throw new Error("Application not found");
-    }
-
-    const membership = await auth.api.getActiveMember({
-        query: {
-            organizationId: app.jobPosting.organizationId,
-            userId: session.user.id
-        },
-        headers: await headers()
-    });
-
-    if (!membership) {
-        throw new Error("You are not authorized to update this application");
-    }
-
-    await db.update(application)
-        .set({ status })
-        .where(eq(application.id, applicationId));
-    
-    // Trigger workflow
-    await triggerWorkflow("application.status_updated", {
-        applicationId,
-        status,
-        previousStatus: app.status,
-    });
-
-    revalidatePath(`/dashboard/organization/jobs/${app.jobPostingId}`);
-    revalidatePath(`/dashboard/organization/jobs/${app.jobPostingId}/pipeline`);
-    
-    return { success: true };
-}
-
 export async function getApplicationAction(applicationId: string) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) {
@@ -173,19 +244,19 @@ export async function getApplicationAction(applicationId: string) {
         with: {
             candidate: true,
             jobPosting: true,
-        }
+        },
     });
 
     if (!app) {
         return null;
     }
 
-    const membership = await auth.api.getActiveMember({
-        query: {
-            organizationId: app.jobPosting.organizationId,
-            userId: session.user.id
-        },
-        headers: await headers()
+    // Verify membership
+    const membership = await db.query.organizationMember.findFirst({
+        where: and(
+            eq(organizationMember.organizationId, app.jobPosting.organizationId),
+            eq(organizationMember.userId, session.user.id)
+        )
     });
 
     if (!membership) {
@@ -195,38 +266,3 @@ export async function getApplicationAction(applicationId: string) {
     return app;
 }
 
-export async function deleteApplicationAction(applicationId: string) {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) {
-        throw new Error("Unauthorized");
-    }
-
-    const app = await db.query.application.findFirst({
-        where: eq(application.id, applicationId),
-        with: {
-            jobPosting: true,
-        }
-    });
-
-    if (!app) {
-        throw new Error("Application not found");
-    }
-
-    const membership = await auth.api.getActiveMember({
-        query: {
-            organizationId: app.jobPosting.organizationId,
-            userId: session.user.id
-        },
-        headers: await headers()
-    });
-
-    if (!membership) {
-        throw new Error("You are not authorized to delete this application");
-    }
-
-    await db.delete(application).where(eq(application.id, applicationId));
-
-    revalidatePath(`/dashboard/${app.jobPosting.organizationId}/jobs/${app.jobPostingId}/applications`);
-    
-    return { success: true };
-}

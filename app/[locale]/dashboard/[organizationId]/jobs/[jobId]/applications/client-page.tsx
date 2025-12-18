@@ -74,7 +74,7 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
         <div className="space-y-6">
              <div className="flex items-center gap-4">
                 <Link 
-                    href={`/dashboard/organization/jobs/${job.id}`}
+                    href={`/dashboard/${job.organizationId}/jobs/${job.id}`}
                     className={buttonVariants({ variant: "ghost", size: "icon" })}
                 >
                     <ArrowLeftIcon className="h-4 w-4" />
@@ -148,7 +148,7 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
                                                 </a>
                                             )}
                                             <Link 
-                                                href={`/dashboard/organization/jobs/${job.id}/applications/${app.id}`}
+                                                href={`/dashboard/${job.organizationId}/jobs/${job.id}/applications/${app.id}`}
                                                 className={buttonVariants({ variant: "ghost", size: "icon" })}
                                                 title="View Details"
                                             >

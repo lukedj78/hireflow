@@ -111,7 +111,7 @@ export default function SuggestionsClientPage({ candidates, jobId }: Suggestions
                                         href={`mailto:${candidate.email}`}
                                         className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-full")}
                                     >
-                                        <Mail className="w-3 h-3 mr-2" />
+                                        <Envelope className="w-3 h-3 mr-2" />
                                         Contact
                                     </Link>
                                     {candidate.resumeUrl && (

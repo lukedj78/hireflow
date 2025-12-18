@@ -1,0 +1,1 @@
+DROP INDEX `candidate_email_unique`;

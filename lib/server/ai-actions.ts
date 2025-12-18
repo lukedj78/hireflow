@@ -1,8 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { candidate, jobPosting, application } from "@/lib/db/schema";
-import { eq, sql, desc } from "drizzle-orm";
+import { candidate, jobPosting, application, organizationMember } from "@/lib/db/schema";
+import { eq, sql, desc, and } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { generateObject, embed } from 'ai';
@@ -32,9 +32,11 @@ export async function findMatchingCandidatesAction(jobId: string, limit: number 
 
     if (!job) throw new Error("Job not found");
 
-    const membership = await auth.api.getActiveMember({
-        query: { organizationId: job.organizationId, userId: session.user.id },
-        headers: await headers()
+    const membership = await db.query.organizationMember.findFirst({
+        where: and(
+            eq(organizationMember.organizationId, job.organizationId),
+            eq(organizationMember.userId, session.user.id)
+        )
     });
 
     if (!membership) throw new Error("Unauthorized");
@@ -78,9 +80,11 @@ export async function generateMatchAnalysisAction(applicationId: string) {
 
     if (!app) throw new Error("Application not found");
 
-    const membership = await auth.api.getActiveMember({
-        query: { organizationId: app.jobPosting.organizationId, userId: session.user.id },
-        headers: await headers()
+    const membership = await db.query.organizationMember.findFirst({
+        where: and(
+            eq(organizationMember.organizationId, app.jobPosting.organizationId),
+            eq(organizationMember.userId, session.user.id)
+        )
     });
 
     if (!membership) throw new Error("Unauthorized");
@@ -96,56 +100,33 @@ export async function generateMatchAnalysisAction(applicationId: string) {
     const jobData = {
         title: app.jobPosting.title,
         description: app.jobPosting.description,
-        requirements: app.jobPosting.parsedRequirements,
+        requirements: "See description", // You might want to parse this separately if available
     };
 
     try {
-
-        const result = await generateObject({
+        const { object } = await generateObject({
             model: 'gpt-4o',
             schema: z.object({
-                score: z.number().min(0).max(100),
-                feedback: z.string(),
-                analysis: z.object({
-                    pros: z.array(z.string()),
-                    cons: z.array(z.string()),
-                    skills_matched: z.array(z.string()),
-                    skills_missing: z.array(z.string()),
-                }),
+                score: z.number().min(0).max(100).describe("Match score between 0 and 100"),
+                analysis: z.string().describe("Detailed analysis of the match"),
+                strengths: z.array(z.string()).describe("Key strengths of the candidate"),
+                weaknesses: z.array(z.string()).describe("Potential gaps or weaknesses"),
             }),
             prompt: `
-            You are an expert AI Recruiter. Analyze the compatibility between the Candidate and the Job Posting.
-            
-            CANDIDATE:
-            ${JSON.stringify(candidateData, null, 2)}
-            
-            JOB POSTING:
-            ${JSON.stringify(jobData, null, 2)}
-            
-            Provide a match score (0-100), a detailed feedback summary, and structured lists of pros/cons and skill matches.
-            Be strict but fair.
+                Analyze the match between this candidate and job posting.
+                
+                Candidate:
+                ${JSON.stringify(candidateData)}
+                
+                Job:
+                ${JSON.stringify(jobData)}
             `,
         });
 
-        const { score, feedback, analysis } = result.object;
-
-        // Save to DB
-        await db.update(application)
-            .set({
-                aiScore: score,
-                aiFeedback: feedback,
-                aiAnalysis: JSON.stringify(analysis),
-                updatedAt: new Date(),
-            })
-            .where(eq(application.id, applicationId));
-
-        revalidatePath(`/dashboard/${app.jobPosting.organizationId}/jobs/${app.jobPostingId}/applications/${applicationId}`);
-        
-        return { success: true };
-
+        return object;
     } catch (error) {
-        console.error("AI Matching failed:", error);
-        throw new Error("Failed to generate AI analysis");
+        console.error("AI Analysis failed:", error);
+        throw new Error("Failed to generate analysis");
     }
 }
 
@@ -176,9 +157,11 @@ export async function triggerCandidateParsingAction(candidateId: string) {
     // Check if user is member of any of these organizations
     let authorized = false;
     for (const orgId of organizationIds) {
-        const membership = await auth.api.getActiveMember({
-            query: { organizationId: orgId, userId: session.user.id },
-            headers: await headers()
+        const membership = await db.query.organizationMember.findFirst({
+            where: and(
+                eq(organizationMember.organizationId, orgId),
+                eq(organizationMember.userId, session.user.id)
+            )
         });
         if (membership) {
             authorized = true;
@@ -192,7 +175,6 @@ export async function triggerCandidateParsingAction(candidateId: string) {
 
     if (!process.env.N8N_PARSING_WEBHOOK_URL) {
         console.warn("N8N_PARSING_WEBHOOK_URL not configured. Skipping webhook call.");
-        // We simulate success for now so UI doesn't break if env is missing
         return { success: false, message: "N8N_PARSING_WEBHOOK_URL not configured" };
     }
 
@@ -231,9 +213,11 @@ export async function triggerJobParsingAction(jobId: string) {
 
     if (!job) throw new Error("Job not found");
 
-    const membership = await auth.api.getActiveMember({
-        query: { organizationId: job.organizationId, userId: session.user.id },
-        headers: await headers()
+    const membership = await db.query.organizationMember.findFirst({
+        where: and(
+            eq(organizationMember.organizationId, job.organizationId),
+            eq(organizationMember.userId, session.user.id)
+        )
     });
 
     if (!membership) throw new Error("Unauthorized");

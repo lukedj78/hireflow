@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { jobPosting } from "@/lib/db/schema";
+import { jobPosting, organizationMember } from "@/lib/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
@@ -27,12 +27,11 @@ export async function createJobAction(data: CreateJobData) {
         }
 
         // Verify user is a member of the organization
-        const membership = await auth.api.getActiveMember({
-            query: {
-                organizationId: data.organizationId,
-                userId: session.user.id
-            },
-            headers: await headers()
+        const membership = await db.query.organizationMember.findFirst({
+            where: and(
+                eq(organizationMember.organizationId, data.organizationId),
+                eq(organizationMember.userId, session.user.id)
+            )
         });
 
         if (!membership) {
@@ -72,12 +71,11 @@ export async function getJobsAction(organizationId: string) {
             throw new Error("Unauthorized");
         }
 
-        const membership = await auth.api.getActiveMember({
-            query: {
-                organizationId,
-                userId: session.user.id
-            },
-            headers: await headers()
+        const membership = await db.query.organizationMember.findFirst({
+            where: and(
+                eq(organizationMember.organizationId, organizationId),
+                eq(organizationMember.userId, session.user.id)
+            )
         });
 
         if (!membership) {
@@ -110,12 +108,11 @@ export async function getJobAction(jobId: string) {
             return { success: true, data: null };
         }
 
-        const membership = await auth.api.getActiveMember({
-            query: {
-                organizationId: job.organizationId,
-                userId: session.user.id
-            },
-            headers: await headers()
+        const membership = await db.query.organizationMember.findFirst({
+            where: and(
+                eq(organizationMember.organizationId, job.organizationId),
+                eq(organizationMember.userId, session.user.id)
+            )
         });
 
         if (!membership) {
@@ -175,12 +172,11 @@ export async function updateJobAction(jobId: string, data: Partial<CreateJobData
             throw new Error("Job not found");
         }
 
-        const membership = await auth.api.getActiveMember({
-            query: {
-                organizationId: job.organizationId,
-                userId: session.user.id
-            },
-            headers: await headers()
+        const membership = await db.query.organizationMember.findFirst({
+            where: and(
+                eq(organizationMember.organizationId, job.organizationId),
+                eq(organizationMember.userId, session.user.id)
+            )
         });
 
         if (!membership) {
@@ -226,12 +222,11 @@ export async function deleteJobAction(jobId: string) {
             throw new Error("Job not found");
         }
 
-        const membership = await auth.api.getActiveMember({
-            query: {
-                organizationId: job.organizationId,
-                userId: session.user.id
-            },
-            headers: await headers()
+        const membership = await db.query.organizationMember.findFirst({
+            where: and(
+                eq(organizationMember.organizationId, job.organizationId),
+                eq(organizationMember.userId, session.user.id)
+            )
         });
 
         if (!membership) {

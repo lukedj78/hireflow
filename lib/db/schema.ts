@@ -25,7 +25,10 @@ export const user = sqliteTable("user", {
   subscriptionStatus: text("subscription_status"),
   subscriptionId: text("subscription_id"),
   subscriptionPeriodEnd: integer("subscription_period_end", { mode: "timestamp_ms" }),
-  role: text("role", { enum: ["admin", "business", "candidate"] }).notNull(),
+  role: text("role", { enum: ["user", "admin", "business", "candidate"] }).notNull(),
+  onboardingCompleted: integer("onboarding_completed", { mode: "boolean" }).default(false),
+  onboardingType: text("onboarding_type", { enum: ["business", "candidate"] }),
+  onboardingStep: integer("onboarding_step").default(0),
   banned: integer("banned", { mode: "boolean" }),
   banReason: text("ban_reason"),
   banExpires: integer("ban_expires", { mode: "timestamp_ms" }),
@@ -238,6 +241,7 @@ export const candidate = sqliteTable("candidate", {
     experience: text("experience"), // JSON array of experience objects
     education: text("education"), // JSON array of education objects
     summary: text("summary"), // AI generated summary
+    resumeLastUpdatedAt: integer("resume_last_updated_at", { mode: "timestamp_ms" }),
     embedding: float32Array("embedding"),
     userId: text("user_id").unique().references(() => user.id, { onDelete: "cascade" }),
     createdAt: integer("created_at", { mode: "timestamp_ms" })

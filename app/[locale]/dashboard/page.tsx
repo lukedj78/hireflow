@@ -4,7 +4,6 @@ import { authClient } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 import { CircleNotchIcon } from "@phosphor-icons/react"
-import { PageLayout } from "@/components/page-layout"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -17,6 +16,16 @@ export default function DashboardPage() {
     if (!session) {
       router.push("/auth/sign-in")
       return
+    }
+
+    if (session.user.role === "user") {
+      router.push("/onboarding")
+      return
+    }
+
+    if (session.user.role === "candidate") {
+        router.push("/dashboard/candidate");
+        return;
     }
 
     if (organizations && organizations.length > 0) {

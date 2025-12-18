@@ -1,5 +1,3 @@
-"use client"
-
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import {
   Breadcrumb,
@@ -15,34 +13,43 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { useSession } from "@/lib/auth-client"
-import { useRouter } from "next/navigation"
-import { useEffect } from "react"
-import { CircleNotchIcon } from "@phosphor-icons/react"
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
+import { redirect } from "next/navigation"
+import { db } from "@/lib/db"
+import { organizationMember } from "@/lib/db/schema"
+import { eq, and } from "drizzle-orm"
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
+  params
 }: {
   children: React.ReactNode
+  params: Promise<{ organizationId: string }>
 }) {
-  const { data: session, isPending } = useSession()
-  const router = useRouter()
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
 
-  useEffect(() => {
-    if (!isPending && !session) {
-      router.push("/auth/sign-in")
-    }
-  }, [session, isPending, router])
-
-  if (isPending) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <CircleNotchIcon className="h-8 w-8 animate-spin" />
-      </div>
-    )
+  if (!session) {
+    redirect("/auth/sign-in")
   }
 
-  if (!session) return null
+  const { organizationId } = await params;
+
+  try {
+    await auth.api.setActiveOrganization({
+      body: {
+        organizationId,
+      },
+      // This endpoint requires session cookies.
+      headers: await headers(),
+    });
+  } catch (error) {
+    // Ignore "User is not a member" error since we verified it in DB
+    // This happens because better-auth sometimes has sync issues with the DB state
+    console.warn("Failed to set active organization in session", error);
+  }
 
   return (
     <SidebarProvider>

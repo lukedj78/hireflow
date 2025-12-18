@@ -4,12 +4,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { UsersIcon, BuildingsIcon, ShieldCheckIcon, CreditCardIcon } from "@phosphor-icons/react/dist/ssr";
+import { PageLayout } from "@/components/page-layout";
 
 export default async function AdminDashboardPage() {
     const stats = await getAdminStatsAction();
 
     return (
-        <div className="space-y-6">
+        <PageLayout>
             <div>
                 <h2 className="text-2xl font-bold tracking-tight">Admin Dashboard</h2>
                 <p className="text-muted-foreground">
@@ -109,6 +110,6 @@ export default async function AdminDashboardPage() {
                     </Table>
                 </div>
             </div>
-        </div>
+        </PageLayout>
     );
 }

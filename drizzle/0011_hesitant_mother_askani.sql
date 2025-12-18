@@ -1,0 +1,1 @@
+ALTER TABLE `candidate` ADD `resume_last_updated_at` integer;

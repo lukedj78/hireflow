@@ -56,7 +56,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
           await triggerJobParsingAction(job.id)
           toast.success("AI Analysis triggered. Updates will appear shortly.")
           router.refresh()
-      } catch (error) {
+      } catch {
           toast.error("Failed to trigger analysis")
       } finally {
           setIsParsing(false)
@@ -106,14 +106,14 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
                 AI Suggestions
             </Link>
             <Link 
-                href={`/dashboard/organization/jobs/${job.id}/pipeline`}
+                href={`/dashboard/${organizationId}/jobs/${job.id}/pipeline`}
                 className={buttonVariants({ variant: "default" })}
             >
                 <UsersIcon className="h-4 w-4" />
                 Pipeline View
             </Link>
             <Link 
-                href={`/dashboard/organization/jobs/${job.id}/applications`}
+                href={`/dashboard/${organizationId}/jobs/${job.id}/applications`}
                 className={buttonVariants({ variant: "outline" })}
             >
                 <UsersIcon className="h-4 w-4" />
@@ -152,7 +152,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
               <Label>{t("form.type")}</Label>
               <Select 
                 onValueChange={(val) => form.setValue("type", val as "remote" | "onsite" | "hybrid", { shouldValidate: true })} 
-                defaultValue={form.getValues("type")}
+                value={form.watch("type")}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -199,7 +199,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
             <Label>Status</Label>
             <Select 
               onValueChange={(val) => form.setValue("status", val as "draft" | "published" | "closed", { shouldValidate: true })} 
-              defaultValue={form.getValues("status")}
+              value={form.watch("status")}
             >
               <SelectTrigger>
                 <SelectValue />

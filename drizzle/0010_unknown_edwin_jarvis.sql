@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `candidate_email_unique` ON `candidate` (`email`);

@@ -80,7 +80,8 @@ export default function JobsClientPage({ initialJobs }: JobsClientPageProps) {
             ) : (
               initialJobs.map((job) => (
                 <TableRow key={job.id}>
-                  <TableCell className="font-medium">{job.title}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link href={`/dashboard/${organizationId}/jobs/${job.id}`}>{job.title}</Link>                  </TableCell>
                   <TableCell>{job.location}</TableCell>
                   <TableCell className="capitalize">{job.type ? t(`form.${job.type}`) : job.type}</TableCell>
                   <TableCell className="text-right">

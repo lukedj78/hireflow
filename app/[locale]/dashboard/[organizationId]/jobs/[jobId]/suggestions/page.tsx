@@ -1,5 +1,6 @@
 import { findMatchingCandidatesAction } from "@/lib/server/ai-actions";
 import SuggestionsClientPage from "./client-page";
+import { PageLayout } from "@/components/page-layout";
 
 type Params = Promise<{ jobId: string }>;
 
@@ -16,5 +17,9 @@ export default async function SuggestionsPage(props: { params: Params }) {
         // For now, let's keep it empty or maybe throw if critical
     }
 
-    return <SuggestionsClientPage candidates={candidates} jobId={jobId} />;
+    return (
+        <PageLayout>
+            <SuggestionsClientPage candidates={candidates} jobId={jobId} />
+        </PageLayout>
+    );
 }

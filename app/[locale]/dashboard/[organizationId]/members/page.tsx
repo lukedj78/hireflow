@@ -4,10 +4,11 @@ import { getOrganizationAction } from "@/lib/server/organization-actions"
 import DashboardLoading from "@/components/loading";
 import { PageLayout } from "@/components/page-layout";
 
-export default async function MembersPage({ params }: { params: { organizationId: string } }) {
-    const org = await getOrganizationAction(params.organizationId);
+export default async function MembersPage({ params }: { params: Promise<{ organizationId: string }> }) {
+    const { organizationId } = await params;
+    const org = await getOrganizationAction(organizationId);
     const members = (org?.members || []) as unknown as Member[];
-
+    console.log(members);
     return (
         <PageLayout>
             <Suspense fallback={<DashboardLoading />}>

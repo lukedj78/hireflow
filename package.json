@@ -27,6 +27,7 @@
     "@react-email/components": "^1.0.1",
     "@react-email/render": "^2.0.0",
     "@react-email/tailwind": "^2.0.1",
+    "@supabase/supabase-js": "^2.88.0",
     "ai": "^5.0.115",
     "better-auth": "^1.4.7",
     "class-variance-authority": "^0.7.1",

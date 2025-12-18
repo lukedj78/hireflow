@@ -1,0 +1,102 @@
+{
+  "name": "HireFlow - General Events",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "events",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ],
+      "webhookId": "general-events-webhook"
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.body.event }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "application.created"
+            },
+            {
+              "value2": "application.status_updated"
+            }
+          ]
+        }
+      },
+      "name": "Switch Event",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "New Application Received",
+        "text": "={{ 'New application for ' + $node[\"Webhook\"].json.body.payload.job.title + ' from ' + $node[\"Webhook\"].json.body.payload.candidate.name }}",
+        "toEmail": "hr@company.com"
+      },
+      "name": "Email HR",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        500,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "subject": "Application Status Updated",
+        "text": "={{ 'Application status updated to: ' + $node[\"Webhook\"].json.body.payload.application.status }}",
+        "toEmail": "candidate@email.com"
+      },
+      "name": "Email Candidate",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        500,
+        400
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch Event": {
+      "main": [
+        [
+          {
+            "node": "Email HR",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,0 +1,174 @@
+{
+  "name": "HireFlow - CV Parsing (Automated Screening)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "parse-cv",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ],
+      "webhookId": "parse-cv-webhook"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.body.resume.url }}",
+        "method": "GET",
+        "responseFormat": "file",
+        "options": {}
+      },
+      "name": "Download Resume",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        300,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "binaryPropertyName": "data"
+      },
+      "name": "Extract Text",
+      "type": "n8n-nodes-base.readPdf",
+      "typeVersion": 1,
+      "position": [
+        500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are an expert HR Recruiter and AI Analyst. Your task is to screen and parse the provided resume text.\n\nExtract the following structured data in strict JSON format:\n- `skills`: Array of strings (technical and soft skills).\n- `experience`: Array of objects (company, position, startDate, endDate, description).\n- `education`: Array of objects (institution, degree, startDate, endDate).\n- `summary`: A concise professional summary of the candidate.\n- `years_of_experience`: Total estimated years of professional experience (number).\n- `seniority_level`: Estimated level (Junior, Mid, Senior, Lead, Executive).\n\nReturn ONLY the JSON object."
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.text }}"
+            }
+          ]
+        },
+        "jsonOutput": true
+      },
+      "name": "AI Candidate Analysis",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        700,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAI API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:3000/api/webhooks/n8n/candidate-parsed",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "candidateId",
+              "value": "={{ $node[\"Webhook\"].json.body.id }}"
+            },
+            {
+              "name": "skills",
+              "value": "={{ $json.skills }}"
+            },
+            {
+              "name": "experience",
+              "value": "={{ $json.experience }}"
+            },
+            {
+              "name": "education",
+              "value": "={{ $json.education }}"
+            },
+            {
+              "name": "summary",
+              "value": "={{ $json.summary }}"
+            },
+            {
+              "name": "analysis",
+              "value": "={{ {\"years_of_experience\": $json.years_of_experience, \"seniority_level\": $json.seniority_level} }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Update App",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        900,
+        300
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YOUR_APP_SECRET_CREDENTIAL_ID",
+          "name": "App Webhook Secret"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Download Resume",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Resume": {
+      "main": [
+        [
+          {
+            "node": "Extract Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Text": {
+      "main": [
+        [
+          {
+            "node": "AI Candidate Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Candidate Analysis": {
+      "main": [
+        [
+          {
+            "node": "Update App",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

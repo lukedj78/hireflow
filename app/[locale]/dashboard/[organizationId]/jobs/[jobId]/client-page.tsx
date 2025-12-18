@@ -27,6 +27,7 @@ import { triggerJobParsingAction } from "@/lib/server/ai-actions"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState } from "react"
+import { PageLayout } from "@/components/page-layout"
 
 const jobSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -91,7 +92,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <PageLayout>
       <div className="mb-6 flex items-center justify-between">
         <div>
             <h1 className="text-2xl font-bold tracking-tight">{t("edit")}</h1>
@@ -282,6 +283,6 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
               </CardContent>
           </Card>
       </div>
-    </div>
+    </PageLayout>
   )
 }

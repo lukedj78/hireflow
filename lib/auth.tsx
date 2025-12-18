@@ -15,7 +15,6 @@ import { APIError } from "better-auth/api";
 import { polar, checkout, portal, usage, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
 import { user, session, account, verification, organization as organizationSchema, organizationMember, organizationInvitation, team, teamMember } from "@/lib/db/schema";
-
 interface TeamContext {
     team: {
         name: string;

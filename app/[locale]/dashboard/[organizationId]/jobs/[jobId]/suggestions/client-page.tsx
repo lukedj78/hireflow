@@ -3,11 +3,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Envelope, Briefcase, GraduationCap, FileText } from "@phosphor-icons/react";
+import { buttonVariants } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { EnvelopeIcon, FileTextIcon, MagnifyingGlassIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 
 type SuggestedCandidate = {
     id: string;
@@ -25,7 +26,7 @@ interface SuggestionsClientPageProps {
     jobId: string;
 }
 
-export default function SuggestionsClientPage({ candidates, jobId }: SuggestionsClientPageProps) {
+export default function SuggestionsClientPage({ candidates }: SuggestionsClientPageProps) {
     return (
         <div className="space-y-6">
             <div className="flex flex-col gap-2">
@@ -111,7 +112,7 @@ export default function SuggestionsClientPage({ candidates, jobId }: Suggestions
                                         href={`mailto:${candidate.email}`}
                                         className={cn(buttonVariants({ variant: "outline", size: "sm" }), "w-full")}
                                     >
-                                        <Envelope className="w-3 h-3 mr-2" />
+                                        <EnvelopeIcon className="w-3 h-3 mr-2" />
                                         Contact
                                     </Link>
                                     {candidate.resumeUrl && (
@@ -121,7 +122,7 @@ export default function SuggestionsClientPage({ candidates, jobId }: Suggestions
                                             rel="noopener noreferrer"
                                             className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "w-full")}
                                         >
-                                            <FileText className="w-3 h-3 mr-2" />
+                                            <FileTextIcon className="w-3 h-3 mr-2" />
                                             Resume
                                         </Link>
                                     )}
@@ -132,9 +133,18 @@ export default function SuggestionsClientPage({ candidates, jobId }: Suggestions
                 })}
 
                 {candidates.length === 0 && (
-                    <div className="col-span-full text-center py-12 text-muted-foreground">
-                        <p>No matching candidates found yet.</p>
-                        <p className="text-sm">Try improving the job description to generate a better embedding.</p>
+                    <div className="col-span-full">
+                        <Empty className="border border-dashed">
+                            <EmptyMedia variant="icon">
+                                <MagnifyingGlassIcon className="text-muted-foreground h-8 w-8" />
+                            </EmptyMedia>
+                            <EmptyHeader>
+                                <EmptyTitle>No matching candidates found</EmptyTitle>
+                                <EmptyDescription>
+                                    Try improving the job description to generate a better embedding.
+                                </EmptyDescription>
+                            </EmptyHeader>
+                        </Empty>
                     </div>
                 )}
             </div>

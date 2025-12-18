@@ -4,10 +4,11 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { APIError } from "better-auth/api";
 import { db } from "@/lib/db";
-import { user, candidate, organization, organizationMember } from "@/lib/db/schema";
+import { user, candidate, organization, organizationMember, candidateFile } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { triggerWorkflow } from "@/lib/events";
+import { createPresignedDownloadUrl } from "@/lib/supabase-storage";
 
 async function getSession() {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -54,6 +55,9 @@ export async function completeCandidateOnboardingAction(data: {
     resumeUrl?: string;
     resumeBase64?: string;
     resumeFileName?: string;
+    resumeKey?: string;
+    resumeSize?: number;
+    resumeType?: string;
     skills?: string[];
     experience?: {
         company: string;
@@ -86,6 +90,19 @@ export async function completeCandidateOnboardingAction(data: {
         education: JSON.stringify(data.education || []),
         resumeLastUpdatedAt: (data.resumeUrl || data.resumeBase64) ? now : null,
     }).returning();
+
+    // Save candidate file if Storage upload was used
+    if (data.resumeKey && data.resumeUrl && data.resumeFileName) {
+        await db.insert(candidateFile).values({
+            id: nanoid(),
+            candidateId: candidateId,
+            url: data.resumeUrl,
+            fileKey: data.resumeKey,
+            fileName: data.resumeFileName,
+            fileType: data.resumeType || "application/pdf", // Default or passed
+            fileSize: data.resumeSize || 0,
+        });
+    }
     
     // Update user role and status
     await db.update(user)

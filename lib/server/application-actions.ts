@@ -1,19 +1,23 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { application, candidate, jobPosting, organizationMember } from "@/lib/db/schema";
+import { application, candidate, jobPosting, organizationMember, candidateFile } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { triggerWorkflow } from "@/lib/events";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
+import { createPresignedDownloadUrl } from "../supabase-storage";
 
 export type SubmitApplicationData = {
     jobSlug: string;
     resumeUrl?: string;
     resumeBase64?: string;
     resumeFileName?: string;
+    resumeKey?: string;
+    resumeSize?: number;
+    resumeType?: string;
 };
 
 export async function submitApplicationAction(data: SubmitApplicationData) {
@@ -70,6 +74,31 @@ export async function submitApplicationAction(data: SubmitApplicationData) {
         shouldUpdateResumeDate = true;
     }
 
+    // NEW: Save candidate file if Storage upload was used
+    if (data.resumeKey && data.resumeUrl && data.resumeFileName) {
+        await db.insert(candidateFile).values({
+            id: nanoid(),
+            candidateId: existingCandidate.id,
+            url: data.resumeUrl,
+            fileKey: data.resumeKey,
+            fileName: data.resumeFileName,
+            fileType: data.resumeType || "application/pdf",
+            fileSize: data.resumeSize || 0,
+        });
+        
+        // Ensure candidate has this as current resumeUrl if not already set by above block
+        // (The above block checks resumeUrl !== existing, so it should be handled, 
+        // but explicit update for lastUpdatedAt is good)
+        if (!shouldUpdateResumeDate) {
+             await db.update(candidate)
+                .set({ 
+                    resumeUrl: data.resumeUrl,
+                    resumeLastUpdatedAt: now
+                })
+                .where(eq(candidate.id, existingCandidate.id));
+        }
+    }
+
     // 5. Check if already applied
     const existingApplication = await db.query.application.findFirst({
         where: and(
@@ -91,12 +120,19 @@ export async function submitApplicationAction(data: SubmitApplicationData) {
     }).returning();
 
     // Trigger event for n8n workflow
+    let resumeUrl = data.resumeUrl;
+    // Generate signed URL if we have a key (new upload)
+    if (data.resumeKey) {
+        const signedUrl = await createPresignedDownloadUrl(data.resumeKey, 3600);
+        if (signedUrl) resumeUrl = signedUrl;
+    }
+
     await triggerWorkflow("application.created", {
         application: newApplication,
         candidate: existingCandidate,
         job,
         resume: {
-            url: data.resumeUrl,
+            url: resumeUrl,
             fileName: data.resumeFileName,
             content: data.resumeBase64, // Base64 encoded file content
         }
@@ -225,7 +261,14 @@ export async function getJobApplicationsAction(jobId: string) {
     const applications = await db.query.application.findMany({
         where: eq(application.jobPostingId, jobId),
         with: {
-            candidate: true,
+            candidate: {
+                with: {
+                    files: {
+                        orderBy: (files, { desc }) => [desc(files.createdAt)],
+                        limit: 1,
+                    },
+                }
+            },
         },
         orderBy: [desc(application.createdAt)],
     });
@@ -242,7 +285,14 @@ export async function getApplicationAction(applicationId: string) {
     const app = await db.query.application.findFirst({
         where: eq(application.id, applicationId),
         with: {
-            candidate: true,
+            candidate: {
+                with: {
+                    files: {
+                        orderBy: (files, { desc }) => [desc(files.createdAt)],
+                        limit: 1,
+                    },
+                }
+            },
             jobPosting: true,
         },
     });

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { completeCandidateOnboardingAction } from "@/lib/server/onboarding-actions";
+import { getResumeUploadUrlAction } from "@/lib/server/file-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,19 +57,51 @@ export default function CandidateOnboardingPage() {
     const handleSubmit = async () => {
         setIsLoading(true);
         try {
-            let resumeBase64: string | undefined;
+            let resumeUrl = formData.resumeUrl || undefined;
+            let resumeKey: string | undefined;
             let resumeFileName: string | undefined;
+            let resumeSize: number | undefined;
+            let resumeType: string | undefined;
 
             if (selectedFile) {
-                resumeBase64 = await convertFileToBase64(selectedFile);
+                // Get Presigned URL
+                const { success, data } = await getResumeUploadUrlAction(
+                    selectedFile.name,
+                    selectedFile.type,
+                    selectedFile.size
+                );
+
+                if (!success || !data) {
+                    throw new Error("Failed to get upload URL");
+                }
+
+                // Upload to Storage
+                const uploadResponse = await fetch(data.uploadUrl, {
+                    method: "PUT",
+                    body: selectedFile,
+                    headers: {
+                        "Content-Type": selectedFile.type,
+                    },
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error("Failed to upload file");
+                }
+
+                resumeUrl = data.publicUrl;
+                resumeKey = data.fileKey;
                 resumeFileName = selectedFile.name;
+                resumeSize = selectedFile.size;
+                resumeType = selectedFile.type;
             }
 
             await completeCandidateOnboardingAction({
                 phone: formData.phone,
-                resumeUrl: formData.resumeUrl || undefined,
-                resumeBase64,
+                resumeUrl,
+                resumeKey,
                 resumeFileName,
+                resumeSize,
+                resumeType,
                 skills: formData.skills.split(",").map(s => s.trim()).filter(Boolean),
             });
             toast.success("Profile setup complete!");

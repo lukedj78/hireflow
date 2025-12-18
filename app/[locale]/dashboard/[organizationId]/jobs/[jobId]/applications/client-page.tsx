@@ -1,17 +1,22 @@
 "use client";
 
-import { Application, Candidate, JobPosting } from "@/lib/db/schema";
+import { Application, Candidate, JobPosting, candidateFile } from "@/lib/db/schema";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateApplicationStatusAction, deleteApplicationAction } from "@/lib/server/application-actions";
+import { getResumeDownloadUrlAction } from "@/lib/server/file-actions";
 import { toast } from "sonner";
 import { useRouter, useParams } from "next/navigation";
 import { buttonVariants, Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeftIcon, TrashIcon, FileTextIcon, EyeIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon, TrashIcon, FileTextIcon, EyeIcon, Spinner } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { InferSelectModel } from "drizzle-orm";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
+
 import {
     AlertDialog,
     AlertDialogAction,
@@ -25,8 +30,53 @@ import {
   } from "@/components/ui/alert-dialog";
 
 type ApplicationWithCandidate = Application & {
-    candidate: Candidate;
+    candidate: Candidate & {
+        files?: InferSelectModel<typeof candidateFile>[];
+    };
 };
+
+function ResumeButton({ candidate }: { candidate: ApplicationWithCandidate['candidate'] }) {
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleView = async () => {
+        setIsLoading(true);
+        try {
+            const fileKey = candidate.files?.[0]?.fileKey;
+            
+            if (fileKey) {
+                const result = await getResumeDownloadUrlAction(fileKey);
+                if (result.success) {
+                    window.open(result.url, '_blank');
+                } else {
+                    toast.error(result.error || "Failed to generate download link");
+                }
+            } else if (candidate.resumeUrl) {
+                window.open(candidate.resumeUrl, '_blank');
+            } else {
+                toast.error("No resume found");
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to open resume");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (!candidate.resumeUrl && (!candidate.files || candidate.files.length === 0)) return null;
+
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleView}
+            disabled={isLoading}
+            title="View Resume"
+        >
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileTextIcon className="h-4 w-4" />}
+        </Button>
+    );
+}
 
 type ApplicationStatus = "applied" | "screening" | "interview" | "offer" | "hired" | "rejected";
 
@@ -136,17 +186,7 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
-                                            {app.candidate.resumeUrl && (
-                                                <a 
-                                                    href={app.candidate.resumeUrl} 
-                                                    target="_blank" 
-                                                    rel="noopener noreferrer" 
-                                                    className={buttonVariants({ variant: "ghost", size: "icon" })}
-                                                    title="View Resume"
-                                                >
-                                                    <FileTextIcon className="h-4 w-4" />
-                                                </a>
-                                            )}
+                                            <ResumeButton candidate={app.candidate} />
                                             <Link 
                                                 href={`/dashboard/${job.organizationId}/jobs/${job.id}/applications/${app.id}`}
                                                 className={buttonVariants({ variant: "ghost", size: "icon" })}

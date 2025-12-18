@@ -253,6 +253,19 @@ export const candidate = sqliteTable("candidate", {
         .notNull(),
 });
 
+export const candidateFile = sqliteTable("candidate_file", {
+    id: text("id").primaryKey(),
+    candidateId: text("candidate_id").notNull().references(() => candidate.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    fileKey: text("file_key").notNull(),
+    fileName: text("file_name").notNull(),
+    fileType: text("file_type").notNull(),
+    fileSize: integer("file_size").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+        .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+        .notNull(),
+});
+
 export const application = sqliteTable("application", {
     id: text("id").primaryKey(),
     jobPostingId: text("job_posting_id").notNull().references(() => jobPosting.id, { onDelete: "cascade" }),
@@ -281,6 +294,7 @@ export const jobPostingRelations = relations(jobPosting, ({ one, many }) => ({
 export type JobPosting = typeof jobPosting.$inferSelect;
 export type Application = typeof application.$inferSelect;
 export type Candidate = typeof candidate.$inferSelect;
+export type CandidateFile = typeof candidateFile.$inferSelect;
 
 export const candidateRelations = relations(candidate, ({ one, many }) => ({
     user: one(user, {
@@ -288,6 +302,14 @@ export const candidateRelations = relations(candidate, ({ one, many }) => ({
         references: [user.id],
     }),
     applications: many(application),
+    files: many(candidateFile),
+}));
+
+export const candidateFileRelations = relations(candidateFile, ({ one }) => ({
+    candidate: one(candidate, {
+        fields: [candidateFile.candidateId],
+        references: [candidate.id],
+    }),
 }));
 
 export const applicationRelations = relations(application, ({ one }) => ({

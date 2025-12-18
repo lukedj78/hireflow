@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { submitApplicationAction } from "@/lib/server/application-actions";
+import { getResumeUploadUrlAction } from "@/lib/server/file-actions";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FileTextIcon, ClockIcon, MapPinIcon, BriefcaseIcon, CurrencyDollarIcon, BuildingsIcon } from "@phosphor-icons/react";
@@ -89,12 +90,42 @@ export default function ApplyClientPage({ job, candidateProfile }: ApplyClientPa
     async function onSubmit(data: ApplicationFormValues) {
         setIsSubmitting(true);
         try {
-            let resumeBase64: string | undefined;
+            let resumeUrl = data.resumeUrl;
+            let resumeKey: string | undefined;
             let resumeFileName: string | undefined;
+            let resumeSize: number | undefined;
+            let resumeType: string | undefined;
 
             if (selectedFile) {
-                resumeBase64 = await convertFileToBase64(selectedFile);
+                // Get Presigned URL
+                const { success, data } = await getResumeUploadUrlAction(
+                    selectedFile.name,
+                    selectedFile.type,
+                    selectedFile.size
+                );
+
+                if (!success || !data) {
+                    throw new Error("Failed to get upload URL");
+                }
+
+                // Upload to Storage
+                const uploadResponse = await fetch(data.uploadUrl, {
+                    method: "PUT",
+                    body: selectedFile,
+                    headers: {
+                        "Content-Type": selectedFile.type,
+                    },
+                });
+
+                if (!uploadResponse.ok) {
+                    throw new Error("Failed to upload file");
+                }
+
+                resumeUrl = data.publicUrl;
+                resumeKey = data.fileKey;
                 resumeFileName = selectedFile.name;
+                resumeSize = selectedFile.size;
+                resumeType = selectedFile.type;
             } else if (!useExistingResume && !data.resumeUrl) {
                  toast.error("Please upload a resume or provide a link");
                  setIsSubmitting(false);
@@ -107,13 +138,15 @@ export default function ApplyClientPage({ job, candidateProfile }: ApplyClientPa
                 return;
             }
 
-            const finalResumeUrl = useExistingResume ? (candidateProfile?.resumeUrl || undefined) : data.resumeUrl;
+            const finalResumeUrl = useExistingResume ? (candidateProfile?.resumeUrl || undefined) : resumeUrl;
 
             await submitApplicationAction({
                 jobSlug: job.slug,
                 resumeUrl: finalResumeUrl || undefined,
-                resumeBase64,
+                resumeKey,
                 resumeFileName,
+                resumeSize,
+                resumeType,
             });
             toast.success("Application submitted successfully!");
             router.push(`/jobs/${job.slug}/success`);

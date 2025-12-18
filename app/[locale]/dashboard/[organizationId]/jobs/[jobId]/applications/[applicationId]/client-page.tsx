@@ -15,6 +15,7 @@ import { useRouter } from "next/navigation";
 import { buttonVariants } from "@/components/ui/button";
 import { SparkleIcon, CircleNotchIcon, ThumbsUpIcon, ThumbsDownIcon, TargetIcon } from "@phosphor-icons/react";
 import { useState } from "react";
+import { PageLayout } from "@/components/page-layout";
 
 type ApplicationWithRelations = Application & {
     candidate: Candidate;
@@ -67,7 +68,7 @@ export default function ApplicationDetailClientPage({ application }: { applicati
     }
 
     return (
-        <div className="space-y-6 max-w-4xl mx-auto">
+        <PageLayout>
             <div className="flex items-center gap-4">
                 <Link 
                     href={`/dashboard/${application.jobPosting.organizationId}/jobs/${application.jobPostingId}/applications`}
@@ -349,6 +350,6 @@ export default function ApplicationDetailClientPage({ application }: { applicati
                     </Card>
                 </div>
             </div>
-        </div>
+        </PageLayout>
     );
 }

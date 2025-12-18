@@ -21,17 +21,17 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { deleteJobAction } from "@/lib/server/jobs-actions"
 import { toast } from "sonner"
-import { useRouter, useParams } from "next/navigation"
+import { useRouter } from "next/navigation"
+import { PageHeader } from "@/components/page-header"
 
 interface JobsClientPageProps {
   initialJobs: JobPosting[]
+  organizationId: string
 }
 
-export default function JobsClientPage({ initialJobs }: JobsClientPageProps) {
+export default function JobsClientPage({ initialJobs, organizationId }: JobsClientPageProps) {
   const t = useTranslations("Jobs")
   const router = useRouter()
-  const params = useParams()
-  const organizationId = params?.organizationId as string
 
   const handleDelete = async (jobId: string) => {
     try {
@@ -49,16 +49,16 @@ export default function JobsClientPage({ initialJobs }: JobsClientPageProps) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-muted-foreground">{t("description")}</p>
-        </div>
-        <Link href={`/dashboard/${organizationId}/jobs/new`} className={buttonVariants()}>
+      <PageHeader
+        title={t("title")}
+        description={t("description")}
+        actions={
+          <Link href={`/dashboard/${organizationId}/jobs/new`} className={buttonVariants()}>
             <PlusIcon className="h-4 w-4" />
             {t("create")}
-        </Link>
-      </div>
+          </Link>
+        }
+      />
 
       <div className="rounded-md border">
         <Table>

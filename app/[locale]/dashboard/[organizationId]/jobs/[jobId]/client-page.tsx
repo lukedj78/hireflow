@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useState } from "react"
 import { PageLayout } from "@/components/page-layout"
+import { PageHeader } from "@/components/page-header"
 
 const jobSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -93,12 +94,12 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
 
   return (
     <PageLayout>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-            <h1 className="text-2xl font-bold tracking-tight">{t("edit")}</h1>
-            <p className="text-muted-foreground">{t("description")}</p>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        title={t("edit")}
+        description={t("description")}
+        backHref={`/dashboard/${organizationId}/jobs`}
+        actions={
+          <>
             <Link 
                 href={`/dashboard/${organizationId}/jobs/${job.id}/suggestions`}
                 className={buttonVariants({ variant: "secondary" })}
@@ -120,8 +121,9 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
                 <UsersIcon className="h-4 w-4" />
                 List View
             </Link>
-        </div>
-      </div>
+          </>
+        }
+      />
       
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">

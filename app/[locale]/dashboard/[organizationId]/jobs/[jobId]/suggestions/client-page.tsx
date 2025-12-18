@@ -9,6 +9,7 @@ import { EnvelopeIcon, FileTextIcon, MagnifyingGlassIcon } from "@phosphor-icons
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { PageHeader } from "@/components/page-header";
 
 type SuggestedCandidate = {
     id: string;
@@ -24,17 +25,17 @@ type SuggestedCandidate = {
 interface SuggestionsClientPageProps {
     candidates: SuggestedCandidate[];
     jobId: string;
+    organizationId: string;
 }
 
-export default function SuggestionsClientPage({ candidates }: SuggestionsClientPageProps) {
+export default function SuggestionsClientPage({ candidates, jobId, organizationId }: SuggestionsClientPageProps) {
     return (
         <div className="space-y-6">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">AI Suggested Candidates</h1>
-                <p className="text-muted-foreground">
-                    Based on semantic matching between the job description and candidate profiles.
-                </p>
-            </div>
+            <PageHeader
+                title="AI Suggested Candidates"
+                description="Based on semantic matching between the job description and candidate profiles."
+                backHref={`/dashboard/${organizationId}/jobs/${jobId}`}
+            />
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {candidates.map((candidate) => {
@@ -67,7 +68,9 @@ export default function SuggestionsClientPage({ candidates }: SuggestionsClientP
                                         </Avatar>
                                         <div>
                                             <CardTitle className="text-base font-semibold leading-none">
-                                                {candidate.name}
+                                                <Link href={`/dashboard/${organizationId}/jobs/${jobId}/candidates/${candidate.id}`} className="hover:underline">
+                                                    {candidate.name}
+                                                </Link>
                                             </CardTitle>
                                             <CardDescription className="text-xs mt-1 truncate max-w-[180px]">
                                                 {candidate.email}

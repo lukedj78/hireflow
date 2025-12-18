@@ -15,7 +15,7 @@ export default async function JobsPage({ params }: { params: Promise<{ organizat
     return (
         <PageLayout>
             <Suspense fallback={<DashboardLoading />}>
-                <JobsClientPage initialJobs={jobs as unknown as JobPosting[]} />
+                <JobsClientPage initialJobs={jobs as unknown as JobPosting[]} organizationId={organizationId} />
             </Suspense>
         </PageLayout>
     )

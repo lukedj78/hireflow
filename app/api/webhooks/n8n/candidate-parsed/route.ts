@@ -12,11 +12,15 @@ export async function POST(request: Request) {
         }
 
         const body = await request.json();
-        const { candidateId, skills, experience, summary, education } = body;
+        const { candidateId, skills, experience, summary, education, analysis } = body;
 
         if (!candidateId) {
             return NextResponse.json({ error: "Missing candidateId" }, { status: 400 });
         }
+
+        // Extract analysis fields
+        const yearsOfExperience = analysis?.years_of_experience;
+        const seniorityLevel = analysis?.seniority_level;
 
         // 1. Generate Embedding
         // We combine fields for a rich semantic representation
@@ -24,9 +28,13 @@ export async function POST(request: Request) {
         const skillsStr = Array.isArray(skills) ? skills.join(", ") : (skills || "");
         const experienceStr = typeof experience === 'string' ? experience : JSON.stringify(experience);
         const summaryStr = summary || "";
+        const seniorityStr = seniorityLevel ? `Seniority: ${seniorityLevel}` : "";
+        const yoeStr = yearsOfExperience ? `Years of Experience: ${yearsOfExperience}` : "";
 
         const textToEmbed = `
             Summary: ${summaryStr}
+            ${seniorityStr}
+            ${yoeStr}
             Skills: ${skillsStr}
             Experience: ${experienceStr}
         `.trim();
@@ -42,6 +50,8 @@ export async function POST(request: Request) {
                 experience: typeof experience === 'string' ? experience : JSON.stringify(experience),
                 education: typeof education === 'string' ? education : JSON.stringify(education),
                 summary: summary,
+                yearsOfExperience: yearsOfExperience ? parseInt(yearsOfExperience) : null,
+                seniority: seniorityLevel,
                 embedding: embedding,
                 updatedAt: new Date()
             })

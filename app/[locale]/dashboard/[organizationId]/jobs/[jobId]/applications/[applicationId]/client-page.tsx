@@ -4,18 +4,17 @@ import { Application, Candidate, JobPosting } from "@/lib/db/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, EnvelopeIcon, PhoneIcon, CalendarIcon, DownloadIcon } from "@phosphor-icons/react";
-import Link from "next/link";
+import { EnvelopeIcon, PhoneIcon, CalendarIcon, DownloadIcon } from "@phosphor-icons/react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { updateApplicationStatusAction } from "@/lib/server/application-actions";
 import { triggerCandidateParsingAction, generateMatchAnalysisAction } from "@/lib/server/ai-actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { buttonVariants } from "@/components/ui/button";
 import { SparkleIcon, CircleNotchIcon, ThumbsUpIcon, ThumbsDownIcon, TargetIcon } from "@phosphor-icons/react";
 import { useState } from "react";
 import { PageLayout } from "@/components/page-layout";
+import { PageHeader } from "@/components/page-header";
 
 type ApplicationWithRelations = Application & {
     candidate: Candidate;
@@ -69,18 +68,11 @@ export default function ApplicationDetailClientPage({ application }: { applicati
 
     return (
         <PageLayout>
-            <div className="flex items-center gap-4">
-                <Link 
-                    href={`/dashboard/${application.jobPosting.organizationId}/jobs/${application.jobPostingId}/applications`}
-                    className={buttonVariants({ variant: "ghost", size: "icon" })}
-                >
-                    <ArrowLeftIcon className="h-4 w-4" />
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold">{application.candidate.name}</h1>
-                    <p className="text-muted-foreground">Applying for {application.jobPosting.title}</p>
-                </div>
-            </div>
+            <PageHeader
+                title={application.candidate.name}
+                description={`Applying for ${application.jobPosting.title}`}
+                backHref={`/dashboard/${application.jobPosting.organizationId}/jobs/${application.jobPostingId}/applications`}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2 space-y-6">

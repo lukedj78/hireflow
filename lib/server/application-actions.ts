@@ -262,6 +262,23 @@ export async function getJobApplicationsAction(jobId: string) {
         where: eq(application.jobPostingId, jobId),
         with: {
             candidate: {
+                columns: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    phone: true,
+                    resumeUrl: true,
+                    skills: true,
+                    experience: true,
+                    education: true,
+                    summary: true,
+                    yearsOfExperience: true,
+                    seniority: true,
+                    resumeLastUpdatedAt: true,
+                    userId: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
                 with: {
                     files: {
                         orderBy: (files, { desc }) => [desc(files.createdAt)],
@@ -286,6 +303,23 @@ export async function getApplicationAction(applicationId: string) {
         where: eq(application.id, applicationId),
         with: {
             candidate: {
+                columns: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    phone: true,
+                    resumeUrl: true,
+                    skills: true,
+                    experience: true,
+                    education: true,
+                    summary: true,
+                    yearsOfExperience: true,
+                    seniority: true,
+                    resumeLastUpdatedAt: true,
+                    userId: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
                 with: {
                     files: {
                         orderBy: (files, { desc }) => [desc(files.createdAt)],
@@ -293,7 +327,22 @@ export async function getApplicationAction(applicationId: string) {
                     },
                 }
             },
-            jobPosting: true,
+            jobPosting: {
+                columns: {
+                    id: true,
+                    title: true,
+                    slug: true,
+                    description: true,
+                    location: true,
+                    type: true,
+                    salaryRange: true,
+                    status: true,
+                    parsedRequirements: true,
+                    organizationId: true,
+                    createdAt: true,
+                    updatedAt: true,
+                }
+            },
         },
     });
 

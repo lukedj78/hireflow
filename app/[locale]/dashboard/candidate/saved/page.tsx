@@ -3,18 +3,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { MapPin, Clock, DollarSign, Building, Trash2 } from "lucide-react"
 import { PageLayout } from "@/components/page-layout"
+import { PageHeader } from "@/components/page-header"
 
 export default function CandidateSavedJobsPage() {
   return (
     <PageLayout>
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Saved Jobs</h1>
-          <p className="text-muted-foreground">
-            Manage your saved job listings.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Saved Jobs"
+        description="Manage your saved job listings."
+      />
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {/* Saved Job Card 1 */}

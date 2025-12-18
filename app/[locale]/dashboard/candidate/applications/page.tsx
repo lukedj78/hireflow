@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
@@ -121,9 +122,11 @@ export default function CandidateApplicationsPage() {
                         <MoreHorizontal className="h-4 w-4" />
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Withdraw Application</DropdownMenuItem>
+                        <DropdownMenuGroup>
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem>View Details</DropdownMenuItem>
+                          <DropdownMenuItem>Withdraw Application</DropdownMenuItem>
+                        </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

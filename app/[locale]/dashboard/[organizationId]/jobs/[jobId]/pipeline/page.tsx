@@ -7,6 +7,8 @@ import { notFound, redirect } from "next/navigation";
 import PipelineClientPage from "./client-page";
 import { PageLayout } from "@/components/page-layout";
 
+import { PageHeader } from "@/components/page-header";
+
 interface PageProps {
     params: Promise<{
         organizationId: string;
@@ -16,7 +18,7 @@ interface PageProps {
 }
 
 export default async function PipelinePage({ params }: PageProps) {
-    const { jobId } = await params;
+    const { jobId, organizationId } = await params;
     const session = await auth.api.getSession({ headers: await headers() });
 
     if (!session) {
@@ -52,12 +54,15 @@ export default async function PipelinePage({ params }: PageProps) {
 
     return (
         <PageLayout maxWidth="full" className="h-[calc(100vh-4rem)] flex flex-col">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-2xl font-bold tracking-tight">Recruiting Pipeline</h1>
-                <p className="text-muted-foreground">
-                    Manage candidates for <span className="font-semibold text-foreground">{job.title}</span>
-                </p>
-            </div>
+            <PageHeader
+                title="Recruiting Pipeline"
+                description={
+                    <>
+                        Manage candidates for <span className="font-semibold text-foreground">{job.title}</span>
+                    </>
+                }
+                backHref={`/dashboard/${organizationId}/jobs/${jobId}`}
+            />
             
             <div className="flex-1 overflow-hidden min-h-0">
                 <PipelineClientPage 

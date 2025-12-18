@@ -8,14 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { updateApplicationStatusAction, deleteApplicationAction } from "@/lib/server/application-actions";
 import { getResumeDownloadUrlAction } from "@/lib/server/file-actions";
 import { toast } from "sonner";
-import { useRouter, useParams } from "next/navigation";
-import { buttonVariants, Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import { ArrowLeftIcon, TrashIcon, FileTextIcon, EyeIcon, Spinner } from "@phosphor-icons/react";
+import { TrashIcon, FileTextIcon, EyeIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { InferSelectModel } from "drizzle-orm";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 
 import {
     AlertDialog,
@@ -27,7 +28,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
     AlertDialogTrigger,
-  } from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog";
 
 type ApplicationWithCandidate = Application & {
     candidate: Candidate & {
@@ -42,7 +43,7 @@ function ResumeButton({ candidate }: { candidate: ApplicationWithCandidate['cand
         setIsLoading(true);
         try {
             const fileKey = candidate.files?.[0]?.fileKey;
-            
+
             if (fileKey) {
                 const result = await getResumeDownloadUrlAction(fileKey);
                 if (result.success) {
@@ -87,16 +88,19 @@ interface ApplicationsClientPageProps {
 
 export default function ApplicationsClientPage({ job, applications }: ApplicationsClientPageProps) {
     const router = useRouter();
+    const [isPending, startTransition] = useTransition();
 
-    async function handleStatusChange(applicationId: string, newStatus: string) {
-        try {
-            await updateApplicationStatusAction(applicationId, newStatus as ApplicationStatus);
-            toast.success("Status updated");
-            router.refresh();
-        } catch (error) {
-            toast.error("Failed to update status");
-        }
-    }
+    const handleStatusChange = (applicationId: string, newStatus: string) => {
+        startTransition(async () => {
+            const result = await updateApplicationStatusAction(applicationId, newStatus as ApplicationStatus);
+            if (!result.success) {
+                toast.error(result.error);
+            } else {
+                toast.success("Status updated");
+                router.refresh();
+            }
+        });
+    };
 
     async function handleDelete(applicationId: string) {
         try {
@@ -122,19 +126,12 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
 
     return (
         <div className="space-y-6">
-             <div className="flex items-center gap-4">
-                <Link 
-                    href={`/dashboard/${job.organizationId}/jobs/${job.id}`}
-                    className={buttonVariants({ variant: "ghost", size: "icon" })}
-                >
-                    <ArrowLeftIcon className="h-4 w-4" />
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold">Applications for {job.title}</h1>
-                    <p className="text-muted-foreground">{applications.length} applications received</p>
-                </div>
-            </div>
-
+            <PageHeader
+                title={`Applications for ${job.title}`}
+                description={`${applications.length} applications received`}
+                backHref={`/dashboard/${job.organizationId}/jobs/${job.id}`}
+            />
+            
             <div className="border rounded-lg">
                 <Table>
                     <TableHeader>
@@ -167,8 +164,8 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
                                         {getStatusBadge(app.status)}
                                     </TableCell>
                                     <TableCell>
-                                        <Select 
-                                            defaultValue={app.status} 
+                                        <Select
+                                            defaultValue={app.status}
                                             onValueChange={(val) => val && handleStatusChange(app.id, val)}
                                         >
                                             <SelectTrigger className="w-[140px]">
@@ -187,7 +184,7 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-2">
                                             <ResumeButton candidate={app.candidate} />
-                                            <Link 
+                                            <Link
                                                 href={`/dashboard/${job.organizationId}/jobs/${job.id}/applications/${app.id}`}
                                                 className={buttonVariants({ variant: "ghost", size: "icon" })}
                                                 title="View Details"

@@ -6,8 +6,130 @@ import { eq, sql, and } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { generateObject, embed } from 'ai';
+import { mistral } from '@ai-sdk/mistral';
 import { z } from 'zod';
 import { revalidatePath } from "next/cache";
+import { createPresignedDownloadUrl } from "@/lib/supabase-storage";
+
+async function runOCR(pdfUrl: string) {
+    const apiKey = process.env.MISTRAL_API_KEY || process.env.AI_GATEWAY_API_KEY;
+    if (!apiKey) throw new Error("Missing MISTRAL_API_KEY or AI_GATEWAY_API_KEY");
+
+    // Mistral OCR requires the file to be accessible via URL or base64.
+    // Since the resumeUrl might be a private Supabase URL, we should fetch it and convert to base64
+    // OR use the presigned URL if it's public/accessible.
+    // Safe bet: fetch and base64.
+    
+    try {
+        const response = await fetch(pdfUrl);
+        if (!response.ok) throw new Error(`Failed to fetch PDF: ${response.statusText}`);
+        
+        const arrayBuffer = await response.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
+
+        const ocrResponse = await fetch("https://api.mistral.ai/v1/ocr", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: "mistral-ocr-latest",
+                document: {
+                    type: "document_url",
+                    document_url: `data:application/pdf;base64,${base64}`
+                }
+            })
+        });
+
+        if (!ocrResponse.ok) {
+            const errorText = await ocrResponse.text();
+            throw new Error(`Mistral OCR failed: ${ocrResponse.status} ${errorText}`);
+        }
+
+        const data = await ocrResponse.json();
+        // Combine text from pages
+        return data.pages.map((p: { markdown: string }) => p.markdown).join("\n\n");
+    } catch (error) {
+        console.error("runOCR failed:", error);
+        throw error;
+    }
+}
+
+export async function fallbackResumeParsingAction(candidateId: string, resumeKey: string) {
+    try {
+        console.log("N8N_PARSING_WEBHOOK_URL not set. Using Mistral OCR fallback...");
+        
+        // 1. Get signed URL for download
+        const signedUrl = await createPresignedDownloadUrl(resumeKey);
+        if (!signedUrl) throw new Error("Failed to generate download URL for OCR");
+
+        // 2. Perform OCR
+        const ocrText = await runOCR(signedUrl);
+        console.log("OCR Success, extracting data...");
+
+        // 3. Parse with AI
+        const resumeSchema = z.object({
+            skills: z.array(z.string()).describe("Technical and soft skills"),
+            experience: z.array(z.object({
+                company: z.string(),
+                role: z.string(),
+                startDate: z.string(),
+                endDate: z.string().optional(),
+                description: z.string(),
+            })).describe("Professional experience"),
+            education: z.array(z.object({
+                institution: z.string(),
+                degree: z.string(),
+                startDate: z.string(),
+                endDate: z.string().optional(),
+            })).describe("Educational background"),
+            summary: z.string().describe("Professional summary"),
+            years_of_experience: z.number().describe("Total years of experience"),
+            seniority_level: z.enum(["Junior", "Mid", "Senior", "Lead", "Executive"]).describe("Seniority level"),
+        });
+
+        const result = await generateObject({
+            model: mistral('mistral-large-latest'),
+            schema: resumeSchema,
+            prompt: `You are an expert HR Recruiter. Analyze this resume text and extract structured data:\n\n${ocrText}`,
+        });
+
+        const parsedData = result.object;
+
+        // 4. Generate Embedding
+        const textToEmbed = `
+            Summary: ${parsedData.summary}
+            Seniority: ${parsedData.seniority_level}
+            Years of Experience: ${parsedData.years_of_experience}
+            Skills: ${parsedData.skills.join(", ")}
+            Experience: ${JSON.stringify(parsedData.experience)}
+        `.trim();
+
+        const embedding = await generateEmbedding(textToEmbed);
+
+        // 5. Update Database
+        await db.update(candidate)
+            .set({
+                skills: JSON.stringify(parsedData.skills),
+                experience: JSON.stringify(parsedData.experience),
+                education: JSON.stringify(parsedData.education),
+                summary: parsedData.summary,
+                yearsOfExperience: parsedData.years_of_experience,
+                seniority: parsedData.seniority_level,
+                embedding: embedding,
+                updatedAt: new Date(),
+            })
+            .where(eq(candidate.id, candidateId));
+
+        console.log(`Successfully parsed resume for candidate ${candidateId} using AI fallback`);
+        return { success: true };
+
+    } catch (error) {
+        console.error("AI Fallback parsing failed:", error);
+        return { success: false, error: error instanceof Error ? error.message : "AI Fallback parsing failed" };
+    }
+}
 
 export async function generateEmbedding(text: string) {
     try {
@@ -79,8 +201,41 @@ export async function generateMatchAnalysisAction(applicationId: string) {
         const app = await db.query.application.findFirst({
             where: eq(application.id, applicationId),
             with: {
-                candidate: true,
-                jobPosting: true,
+                candidate: {
+                    columns: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                        resumeUrl: true,
+                        skills: true,
+                        experience: true,
+                        education: true,
+                        summary: true,
+                        yearsOfExperience: true,
+                        seniority: true,
+                        resumeLastUpdatedAt: true,
+                        userId: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    }
+                },
+                jobPosting: {
+                    columns: {
+                        id: true,
+                        title: true,
+                        slug: true,
+                        description: true,
+                        location: true,
+                        type: true,
+                        salaryRange: true,
+                        status: true,
+                        parsedRequirements: true,
+                        organizationId: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    }
+                },
             }
         });
 
@@ -150,7 +305,22 @@ export async function triggerCandidateParsingAction(candidateId: string) {
         const apps = await db.query.application.findMany({
             where: eq(application.candidateId, candidateId),
             with: {
-                jobPosting: true
+                jobPosting: {
+                    columns: {
+                        id: true,
+                        title: true,
+                        slug: true,
+                        description: true,
+                        location: true,
+                        type: true,
+                        salaryRange: true,
+                        status: true,
+                        parsedRequirements: true,
+                        organizationId: true,
+                        createdAt: true,
+                        updatedAt: true,
+                    }
+                }
             }
         });
 

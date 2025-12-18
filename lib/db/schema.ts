@@ -241,6 +241,8 @@ export const candidate = sqliteTable("candidate", {
     experience: text("experience"), // JSON array of experience objects
     education: text("education"), // JSON array of education objects
     summary: text("summary"), // AI generated summary
+    yearsOfExperience: integer("years_of_experience"), // AI estimated years
+    seniority: text("seniority"), // AI estimated level
     resumeLastUpdatedAt: integer("resume_last_updated_at", { mode: "timestamp_ms" }),
     embedding: float32Array("embedding"),
     userId: text("user_id").unique().references(() => user.id, { onDelete: "cascade" }),

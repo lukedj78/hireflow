@@ -7,7 +7,8 @@ import { candidate, candidateFile } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
-import { createPresignedDownloadUrl } from "@/lib/supabase-storage";
+import { createPresignedDownloadUrl, deleteFile } from "@/lib/supabase-storage";
+import { fallbackResumeParsingAction } from "./ai-actions";
 
 export async function getCandidateProfileAction() {
     try {
@@ -21,7 +22,6 @@ export async function getCandidateProfileAction() {
             with: {
                 files: {
                     orderBy: (files, { desc }) => [desc(files.createdAt)],
-                    limit: 1,
                 },
             },
         });
@@ -33,12 +33,96 @@ export async function getCandidateProfileAction() {
     }
 }
 
+export async function setDefaultResumeAction(fileId: string) {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) throw new Error("Unauthorized");
+
+    const existingCandidate = await db.query.candidate.findFirst({
+        where: eq(candidate.userId, session.user.id),
+    });
+
+    if (!existingCandidate) throw new Error("Candidate profile not found");
+
+    console.log(`[deleteResumeAction] Attempting to delete fileId: ${fileId} for candidate: ${existingCandidate.id}`);
+
+    const file = await db.query.candidateFile.findFirst({
+        where: eq(candidateFile.id, fileId),
+    });
+
+    if (!file) {
+        console.error(`[deleteResumeAction] File not found in DB: ${fileId}`);
+    } else if (file.candidateId !== existingCandidate.id) {
+        console.error(`[deleteResumeAction] Access denied. File owner: ${file.candidateId}, Current candidate: ${existingCandidate.id}`);
+    }
+
+    if (!file || file.candidateId !== existingCandidate.id) {
+        throw new Error("File not found or access denied");
+    }
+
+    await db.update(candidate)
+        .set({
+            resumeUrl: file.url,
+            resumeLastUpdatedAt: new Date(),
+        })
+        .where(eq(candidate.id, existingCandidate.id));
+
+    revalidatePath("/dashboard/candidate/profile/resume");
+}
+
+export async function deleteResumeAction(fileId: string) {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) throw new Error("Unauthorized");
+
+    const existingCandidate = await db.query.candidate.findFirst({
+        where: eq(candidate.userId, session.user.id),
+    });
+
+    if (!existingCandidate) throw new Error("Candidate profile not found");
+
+    const file = await db.query.candidateFile.findFirst({
+        where: eq(candidateFile.id, fileId),
+    });
+
+    if (!file || file.candidateId !== existingCandidate.id) {
+        throw new Error("File not found or access denied");
+    }
+
+    // Delete from storage
+    try {
+        await deleteFile(file.fileKey);
+    } catch (e) {
+        console.error("Failed to delete file from storage:", e);
+        // Continue to delete from DB even if storage deletion fails (to keep DB clean)
+    }
+
+    // Delete from DB
+    await db.delete(candidateFile).where(eq(candidateFile.id, fileId));
+
+    // If this was the default resume, clear it
+    if (existingCandidate.resumeUrl === file.url) {
+        // Try to find another file to set as default (the most recent one remaining)
+        const nextFile = await db.query.candidateFile.findFirst({
+            where: eq(candidateFile.candidateId, existingCandidate.id),
+            orderBy: (files, { desc }) => [desc(files.createdAt)],
+        });
+
+        await db.update(candidate)
+            .set({
+                resumeUrl: nextFile ? nextFile.url : null,
+                resumeLastUpdatedAt: new Date(),
+            })
+            .where(eq(candidate.id, existingCandidate.id));
+    }
+
+    revalidatePath("/dashboard/candidate/profile/resume");
+}
+
 export async function updateCandidateResumeAction(data: {
     resumeUrl: string;
     resumeKey: string;
     resumeFileName: string;
-    resumeSize: number;
     resumeType: string;
+    resumeSize: number;
 }) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) {
@@ -77,27 +161,80 @@ export async function updateCandidateResumeAction(data: {
     // Trigger N8N parsing workflow
     if (process.env.N8N_PARSING_WEBHOOK_URL) {
         try {
-            await fetch(process.env.N8N_PARSING_WEBHOOK_URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    type: "candidate",
-                    id: existingCandidate.id,
-                    resume: {
-                        url: data.resumeUrl,
-                        fileName: data.resumeFileName,
-                        // We don't have base64 here easily without client sending it, 
-                        // but the new N8N workflow downloads from URL, so URL is enough!
-                    }
-                }),
-            });
+            // Generate a presigned URL for n8n to download the file
+            // The file is in a private bucket, so we need a signed URL
+            const signedUrl = await createPresignedDownloadUrl(data.resumeKey);
+            
+            if (signedUrl) {
+                await fetch(process.env.N8N_PARSING_WEBHOOK_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        type: "candidate",
+                        id: existingCandidate.id,
+                        resume: {
+                            url: signedUrl,
+                            fileName: data.resumeFileName,
+                        }
+                    }),
+                });
+            } else {
+                console.error("Failed to generate signed URL for N8N parsing");
+            }
         } catch (e) {
             console.error("Failed to trigger N8N parsing workflow:", e);
         }
+    } else {
+        // Fallback: Use Mistral OCR + Vercel AI SDK directly
+        await fallbackResumeParsingAction(existingCandidate.id, data.resumeKey);
     }
 
     revalidatePath("/dashboard/candidate/profile/resume");
     return { success: true };
+}
+
+export async function getCandidateByIdAction(candidateId: string) {
+    try {
+        const session = await auth.api.getSession({ headers: await headers() });
+        if (!session) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const candidateData = await db.query.candidate.findFirst({
+            where: eq(candidate.id, candidateId),
+            columns: {
+                id: true,
+                name: true,
+                email: true,
+                phone: true,
+                resumeUrl: true,
+                skills: true,
+                experience: true,
+                education: true,
+                summary: true,
+                yearsOfExperience: true,
+                seniority: true,
+                resumeLastUpdatedAt: true,
+                userId: true,
+                createdAt: true,
+                updatedAt: true,
+            },
+            with: {
+                files: {
+                    orderBy: (files, { desc }) => [desc(files.createdAt)],
+                },
+            },
+        });
+
+        if (!candidateData) {
+            return { success: false, error: "Candidate not found" };
+        }
+
+        return { success: true, data: candidateData };
+    } catch (error) {
+        console.error("Error fetching candidate:", error);
+        return { success: false, error: "Failed to fetch candidate" };
+    }
 }

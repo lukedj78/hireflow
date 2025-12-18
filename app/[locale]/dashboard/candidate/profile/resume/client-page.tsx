@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { UploadIcon, FileTextIcon, EyeIcon, CircleNotchIcon } from "@phosphor-icons/react";
+import { UploadIcon, FileTextIcon, EyeIcon, CircleNotchIcon, TrashIcon } from "@phosphor-icons/react";
 import { getResumeUploadUrlAction, getResumeDownloadUrlAction } from "@/lib/server/file-actions";
-import { updateCandidateResumeAction } from "@/lib/server/candidate-actions";
+import { updateCandidateResumeAction, setDefaultResumeAction, deleteResumeAction } from "@/lib/server/candidate-actions";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { candidate, candidateFile } from "@/lib/db/schema";
 import { InferSelectModel } from "drizzle-orm";
+import { Badge } from "@/components/ui/badge";
+import { StarIcon } from "@phosphor-icons/react";
 
 type CandidateWithFiles = InferSelectModel<typeof candidate> & {
     files?: InferSelectModel<typeof candidateFile>[];
@@ -71,38 +73,46 @@ export default function ResumeClientPage({ candidateProfile }: ResumeClientPageP
         }
     };
 
-    const [isViewing, setIsViewing] = useState(false);
+    const [viewingFileId, setViewingFileId] = useState<string | null>(null);
 
-    const handleViewResume = async () => {
-        if (!candidateProfile) return;
+    const handleViewResume = async (fileKey: string | null, fileId: string) => {
+        if (!fileKey) return;
         
-        setIsViewing(true);
+        setViewingFileId(fileId);
         try {
-            const fileKey = candidateProfile.files?.[0]?.fileKey;
-
-            if (fileKey) {
-                const result = await getResumeDownloadUrlAction(fileKey);
-                if (result.success) {
-                    window.open(result.url, '_blank');
-                } else {
-                    toast.error(result.error || "Failed to generate download link");
-                }
-            } else if (candidateProfile.resumeUrl) {
-                window.open(candidateProfile.resumeUrl, '_blank');
+            const result = await getResumeDownloadUrlAction(fileKey);
+            if (result.success) {
+                window.open(result.url, '_blank');
             } else {
-                toast.error("No resume found");
+                toast.error(result.error || "Failed to generate download link");
             }
         } catch (error) {
             console.error(error);
             toast.error("Failed to view resume");
         } finally {
-            setIsViewing(false);
+            setViewingFileId(null);
         }
     };
 
-    const handleDelete = () => {
-        // Implement delete action if needed, or just warn user
-        toast.info("Delete functionality coming soon. You can upload a new resume to replace the current one.");
+    const handleSetDefault = async (fileId: string) => {
+        try {
+            await setDefaultResumeAction(fileId);
+            toast.success("Default resume updated");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to set default resume");
+        }
+    };
+
+    const handleDelete = async (fileId: string) => {
+        if (!confirm("Are you sure you want to delete this resume?")) return;
+        try {
+            await deleteResumeAction(fileId);
+            toast.success("Resume deleted");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to delete resume");
+        }
     };
 
     return (
@@ -138,48 +148,75 @@ export default function ResumeClientPage({ candidateProfile }: ResumeClientPageP
 
             <Card>
                 <CardHeader>
-                    <CardTitle>Current Resume</CardTitle>
+                    <CardTitle>Resume History</CardTitle>
                     <CardDescription>
-                        This is the resume currently used for your applications.
+                        Manage your uploaded resumes. Select one as default for new applications.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {candidateProfile?.resumeUrl ? (
-                        <div className="flex items-center justify-between p-4 border rounded-lg">
-                            <div className="flex items-center gap-3 overflow-hidden">
-                                <div className="p-2 bg-primary/10 rounded shrink-0">
-                                    <FileTextIcon className="h-6 w-6 text-primary" />
-                                </div>
-                                <div className="min-w-0">
-                                    <p className="font-medium truncate max-w-[200px]">
-                                        {/* Since we don't store filename on candidate table separately (only url), we extract or show generic */}
-                                        {candidateProfile.files?.[0]?.fileName || "Resume"}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                        Updated on {candidateProfile.resumeLastUpdatedAt ? format(new Date(candidateProfile.resumeLastUpdatedAt), 'MMM d, yyyy') : 'Unknown date'}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className="flex gap-2 shrink-0">
-                                <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    title="View" 
-                                    onClick={handleViewResume}
-                                    disabled={isViewing}
-                                >
-                                    {isViewing ? <CircleNotchIcon className="h-4 w-4 animate-spin" /> : <EyeIcon className="h-4 w-4" />}
-                                </Button>
-                                {/*  
-                                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" title="Delete" onClick={handleDelete}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                                */}
-                            </div>
+                    {candidateProfile?.files && candidateProfile.files.length > 0 ? (
+                        <div className="space-y-4">
+                            {candidateProfile.files.map((file) => {
+                                const isDefault = candidateProfile.resumeUrl === file.url;
+                                return (
+                                    <div key={file.id} className={`flex items-center justify-between p-4 border rounded-lg ${isDefault ? 'border-primary/50 bg-primary/5' : ''}`}>
+                                        <div className="flex items-center gap-3 overflow-hidden">
+                                            <div className={`p-2 rounded shrink-0 ${isDefault ? 'bg-primary/20' : 'bg-muted'}`}>
+                                                <FileTextIcon className={`h-6 w-6 ${isDefault ? 'text-primary' : 'text-muted-foreground'}`} />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-medium truncate max-w-[150px] sm:max-w-[200px]">
+                                                        {file.fileName}
+                                                    </p>
+                                                    {isDefault && (
+                                                        <Badge variant="secondary" className="text-xs h-5 px-1.5 bg-primary/10 text-primary border-primary/20">
+                                                            Default
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                    Uploaded {format(new Date(file.createdAt), 'MMM d, yyyy')} • {(file.fileSize / 1024 / 1024).toFixed(2)} MB
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-1 shrink-0">
+                                            {!isDefault && (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    title="Set as Default"
+                                                    onClick={() => handleSetDefault(file.id)}
+                                                >
+                                                    <StarIcon className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                                                </Button>
+                                            )}
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                title="View" 
+                                                onClick={() => handleViewResume(file.fileKey, file.id)}
+                                                disabled={viewingFileId === file.id}
+                                            >
+                                                {viewingFileId === file.id ? <CircleNotchIcon className="h-4 w-4 animate-spin" /> : <EyeIcon className="h-4 w-4" />}
+                                            </Button>
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="text-destructive hover:text-destructive hover:bg-destructive/10" 
+                                                title="Delete" 
+                                                onClick={() => handleDelete(file.id)}
+                                            >
+                                                <TrashIcon className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     ) : (
                         <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                            <p>No resume uploaded yet.</p>
+                            <p>No resumes uploaded yet.</p>
                         </div>
                     )}
                 </CardContent>

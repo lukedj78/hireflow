@@ -9,6 +9,10 @@ import { orgOwnerRole, orgAdminRole, orgMemberRole } from "@/lib/permissions";
 import { APIError } from "better-auth/api";
 import { cache } from "react";
 
+/**
+ * Recupera l'organizzazione attiva dalla sessione corrente.
+ * Utilizza la cache di React.
+ */
 export const getActiveOrganizationAction = cache(async () => {
     const session = await auth.api.getSession({
         headers: await headers()
@@ -23,6 +27,10 @@ export const getActiveOrganizationAction = cache(async () => {
     });
 });
 
+/**
+ * Recupera i dettagli di un'organizzazione specifica tramite ID.
+ * Utilizza la cache di React.
+ */
 export const getOrganizationAction = cache(async (organizationId: string) => {
     return await auth.api.getFullOrganization({
         query: {
@@ -62,6 +70,10 @@ async function checkOrgPermission(organizationId: string, permission: Record<str
     }
 }
 
+/**
+ * Aggiorna i dati di un'organizzazione.
+ * Richiede permessi di aggiornamento sull'organizzazione.
+ */
 export async function updateOrganizationAction(data: {
     organizationId: string;
     data: {
@@ -81,6 +93,9 @@ export async function updateOrganizationAction(data: {
     })
 }
 
+/**
+ * Crea una nuova organizzazione.
+ */
 export async function createOrganizationAction(data: {
   name: string;
   slug: string;
@@ -96,6 +111,9 @@ export async function createOrganizationAction(data: {
   });
 }
 
+/**
+ * Verifica se uno slug per l'organizzazione è disponibile.
+ */
 export async function checkOrganizationSlugAction(slug: string) {
   return await auth.api.checkOrganizationSlug({
     body: { slug },
@@ -103,6 +121,10 @@ export async function checkOrganizationSlugAction(slug: string) {
   });
 }
 
+/**
+ * Recupera un'organizzazione pubblica tramite slug.
+ * Include gli annunci di lavoro pubblicati dell'organizzazione.
+ */
 export async function getPublicOrganizationBySlug(slug: string) {
     const org = await db.query.organization.findFirst({
         where: eq(organization.slug, slug),
@@ -124,6 +146,11 @@ export async function getPublicOrganizationBySlug(slug: string) {
     };
 }
 
+/**
+ * Elenca le organizzazioni a cui appartiene l'utente corrente.
+ * Supporta paginazione, ricerca e ordinamento.
+ * Utilizza la cache di React.
+ */
 export const listOrganizationsAction = cache(async (query?: {
     limit?: number;
     offset?: number;
@@ -137,6 +164,10 @@ export const listOrganizationsAction = cache(async (query?: {
     })
 });
 
+/**
+ * Aggiunge un membro direttamente all'organizzazione.
+ * Richiede permessi di creazione membri.
+ */
 export async function addMemberAction(data: {
     organizationId: string;
     userId: string;
@@ -149,6 +180,10 @@ export async function addMemberAction(data: {
     })
 }
 
+/**
+ * Invia un invito via email per unirsi all'organizzazione.
+ * Richiede permessi di creazione inviti.
+ */
 export async function inviteMemberAction(data: {
     organizationId: string;
     email: string;
@@ -161,6 +196,10 @@ export async function inviteMemberAction(data: {
     })
 }
 
+/**
+ * Rimuove un membro dall'organizzazione.
+ * Richiede permessi di rimozione membri.
+ */
 export async function removeMemberAction(data: {
     organizationId: string;
     memberIdOrEmail: string;
@@ -172,6 +211,10 @@ export async function removeMemberAction(data: {
     })
 }
 
+/**
+ * Aggiorna il ruolo di un membro dell'organizzazione.
+ * Richiede permessi di aggiornamento membri.
+ */
 export async function updateMemberRoleAction(data: {
     organizationId: string;
     memberId: string;
@@ -184,6 +227,10 @@ export async function updateMemberRoleAction(data: {
     })
 }
 
+/**
+ * Imposta l'organizzazione attiva per la sessione corrente.
+ * Richiede permessi di lettura sull'organizzazione.
+ */
 export async function setActiveOrganizationAction(organizationId: string) {
     await checkOrgPermission(organizationId, { organization: ["read"] });
     return await auth.api.setActiveOrganization({
@@ -218,6 +265,10 @@ export async function createTeamAction(data: {
     })
 }
 
+/**
+ * Elimina un team dall'organizzazione.
+ * Richiede permessi di eliminazione team.
+ */
 export async function deleteTeamAction(data: {
     organizationId: string;
     teamId: string;
@@ -239,6 +290,10 @@ export const listTeamsAction = cache(async (organizationId: string) => {
     })
 });
 
+/**
+ * Aggiunge un utente a un team.
+ * Richiede permessi di aggiornamento team.
+ */
 export async function addTeamMemberAction(data: {
     teamId: string;
     userId: string;
@@ -274,6 +329,9 @@ export async function cancelInvitationAction(invitationId: string) {
     })
 }
 
+/**
+ * Accetta un invito a unirsi a un'organizzazione.
+ */
 export async function acceptInvitationAction(invitationId: string) {
     return await auth.api.acceptInvitation({
         body: {
@@ -301,6 +359,10 @@ export async function getInvitationAction(invitationId: string) {
     })
 }
 
+/**
+ * Elenca gli inviti pendenti di un'organizzazione.
+ * Richiede permessi di lettura inviti.
+ */
 export async function listInvitationsAction(organizationId: string) {
     await checkOrgPermission(organizationId, { invitation: ["read"] });
     return await auth.api.listInvitations({
@@ -311,6 +373,10 @@ export async function listInvitationsAction(organizationId: string) {
     })
 }
 
+/**
+ * Rimuove un membro da un team.
+ * Richiede permessi di aggiornamento team.
+ */
 export async function removeTeamMemberAction(data: {
     teamId: string;
     userId: string;
@@ -323,6 +389,10 @@ export async function removeTeamMemberAction(data: {
     })
 }
 
+/**
+ * Permette all'utente corrente di lasciare un'organizzazione.
+ * Richiede permessi di "leave" sull'organizzazione.
+ */
 export async function leaveOrganizationAction(organizationId: string) {
     await checkOrgPermission(organizationId, { organization: ["leave"] });
     const session = await auth.api.getSession({

@@ -16,6 +16,10 @@ async function getSession() {
     return session;
 }
 
+/**
+ * Recupera lo stato di onboarding dell'utente corrente.
+ * Restituisce se l'onboarding è completato e il ruolo dell'utente.
+ */
 export async function getOnboardingStatusAction() {
     const session = await getSession();
     
@@ -30,6 +34,10 @@ export async function getOnboardingStatusAction() {
     return dbUser;
 }
 
+/**
+ * Seleziona il tipo di account (business o candidato) per l'onboarding.
+ * Imposta lo step di onboarding a 1.
+ */
 export async function selectOnboardingTypeAction(type: "business" | "candidate") {
     const session = await getSession();
     
@@ -50,6 +58,11 @@ export async function updateOnboardingStepAction(step: number) {
     return { success: true };
 }
 
+/**
+ * Completa l'onboarding per un candidato.
+ * Crea il profilo del candidato, salva eventuali file caricati e aggiorna il ruolo utente.
+ * Se presente un curriculum, attiva il workflow n8n per il parsing.
+ */
 export async function completeCandidateOnboardingAction(data: {
     phone?: string;
     resumeUrl?: string;

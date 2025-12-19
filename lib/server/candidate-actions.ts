@@ -10,6 +10,10 @@ import { revalidatePath } from "next/cache";
 import { createPresignedDownloadUrl, deleteFile } from "@/lib/supabase-storage";
 import { fallbackResumeParsingAction } from "./ai-actions";
 
+/**
+ * Recupera il profilo del candidato associato all'utente corrente.
+ * Include l'elenco dei file (CV) caricati.
+ */
 export async function getCandidateProfileAction() {
     try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -33,6 +37,10 @@ export async function getCandidateProfileAction() {
     }
 }
 
+/**
+ * Imposta un file (CV) specifico come CV predefinito per il candidato.
+ * Aggiorna il record del candidato con il nuovo URL e data di aggiornamento.
+ */
 export async function setDefaultResumeAction(fileId: string) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) throw new Error("Unauthorized");
@@ -69,6 +77,10 @@ export async function setDefaultResumeAction(fileId: string) {
     revalidatePath("/dashboard/candidate/profile/resume");
 }
 
+/**
+ * Elimina un CV dal sistema (sia dal database che dallo storage).
+ * Se il file eliminato era quello predefinito, cerca di impostarne un altro come nuovo default.
+ */
 export async function deleteResumeAction(fileId: string) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) throw new Error("Unauthorized");
@@ -117,6 +129,9 @@ export async function deleteResumeAction(fileId: string) {
     revalidatePath("/dashboard/candidate/profile/resume");
 }
 
+/**
+ * Carica un nuovo CV per il candidato, lo salva nel DB e avvia il processo di parsing (n8n o fallback AI).
+ */
 export async function updateCandidateResumeAction(data: {
     resumeUrl: string;
     resumeKey: string;
@@ -195,6 +210,10 @@ export async function updateCandidateResumeAction(data: {
     return { success: true };
 }
 
+/**
+ * Recupera i dettagli di un candidato tramite il suo ID.
+ * Utilizzato principalmente lato HR/Azienda per visualizzare i profili.
+ */
 export async function getCandidateByIdAction(candidateId: string) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });

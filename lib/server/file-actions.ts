@@ -5,6 +5,10 @@ import { headers } from "next/headers";
 import { generateFileKey, getPresignedUploadUrl, getPublicUrl, createPresignedDownloadUrl } from "@/lib/supabase-storage";
 import { APIError } from "better-auth/api";
 
+/**
+ * Genera un URL firmato per l'upload di un CV.
+ * Utilizza Supabase Storage per generare l'URL di upload sicuro.
+ */
 export async function getResumeUploadUrlAction(fileName: string, fileType: string, fileSize: number) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) {
@@ -33,6 +37,10 @@ export async function getResumeUploadUrlAction(fileName: string, fileType: strin
     };
 }
 
+/**
+ * Genera un URL firmato per il download di un CV.
+ * Permette l'accesso temporaneo a file privati su Supabase Storage.
+ */
 export async function getResumeDownloadUrlAction(fileKey: string) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) {

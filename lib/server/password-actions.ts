@@ -12,6 +12,10 @@ export async function sendPasswordResetEmail(formData: FormData) {
   });
 }
 
+/**
+ * Reimposta la password dell'utente utilizzando il token ricevuto via email.
+ * Reindirizza alla pagina di login dopo il successo.
+ */
 export async function resetPassword(formData: FormData) {
   const token = formData.get("token") as string;
   const password = formData.get("password") as string;

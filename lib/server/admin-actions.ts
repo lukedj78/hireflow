@@ -23,6 +23,10 @@ async function checkAdminPermission(permission: Record<string, string[]>) {
     }
 }
 
+/**
+ * Crea un nuovo utente nel sistema.
+ * Richiede permessi di amministratore.
+ */
 export async function createUserAction(data: {
   email: string;
   password: string;
@@ -41,6 +45,10 @@ export async function createUserAction(data: {
   });
 }
 
+/**
+ * Recupera la lista degli utenti con supporto a paginazione, ricerca e ordinamento.
+ * Richiede permessi di amministratore.
+ */
 export const listUsersAction = cache(async (query?: {
   limit?: number;
   offset?: number;
@@ -56,6 +64,10 @@ export const listUsersAction = cache(async (query?: {
   });
 });
 
+/**
+ * Banna un utente dal sistema, impedendogli l'accesso.
+ * Richiede permessi di amministratore.
+ */
 export async function banUserAction(userId: string, reason?: string) {
   await checkAdminPermission({ user: ["ban"] });
   return await auth.api.banUser({
@@ -67,6 +79,10 @@ export async function banUserAction(userId: string, reason?: string) {
   });
 }
 
+/**
+ * Rimuove il ban da un utente, ripristinandone l'accesso.
+ * Richiede permessi di amministratore.
+ */
 export async function unbanUserAction(userId: string) {
   await checkAdminPermission({ user: ["unban"] });
   return await auth.api.unbanUser({
@@ -77,6 +93,10 @@ export async function unbanUserAction(userId: string) {
   });
 }
 
+/**
+ * Elimina definitivamente un utente dal sistema.
+ * Richiede permessi di amministratore.
+ */
 export async function removeUserAction(userId: string) {
   await checkAdminPermission({ user: ["delete"] });
   return await auth.api.removeUser({
@@ -87,12 +107,20 @@ export async function removeUserAction(userId: string) {
   });
 }
 
+/**
+ * Scollega un account provider (es. Google, GitHub) da un utente specifico.
+ * Richiede permessi di amministratore.
+ */
 export async function adminUnlinkUserAccountAction(userId: string, providerId: string) {
     await checkAdminPermission({ user: ["unlink-account"] });
     await db.delete(account).where(and(eq(account.userId, userId), eq(account.providerId, providerId)));
     return { success: true };
 }
 
+/**
+ * Permette a un amministratore di accedere come se fosse un altro utente (Impersonation).
+ * Utile per debug e supporto.
+ */
 export async function impersonateUserAction(userId: string) {
   await checkAdminPermission({ user: ["impersonate"] });
   return await auth.api.impersonateUser({
@@ -103,6 +131,10 @@ export async function impersonateUserAction(userId: string) {
   });
 }
 
+/**
+ * Verifica se un utente specifico possiede determinati permessi.
+ * Richiede permessi di amministratore.
+ */
 export async function checkUserPermissionAction(userId: string, permission: Record<string, string[]>) {
     await checkAdminPermission({ user: ["read"] });
     return await auth.api.userHasPermission({
@@ -114,12 +146,20 @@ export async function checkUserPermissionAction(userId: string, permission: Reco
     });
 }
 
+/**
+ * Recupera la lista degli account collegati (es. Google, Email) di un utente.
+ * Richiede permessi di amministratore.
+ */
 export const listUserAccountsAction = cache(async (userId: string) => {
     await checkAdminPermission({ user: ["read"] });
     const accounts = await db.select().from(account).where(eq(account.userId, userId));
     return { data: accounts, error: null };
 });
 
+/**
+ * Recupera le statistiche generali del sistema per la dashboard amministrativa.
+ * Include conteggi di utenti, organizzazioni, team e utenti premium.
+ */
 export const getAdminStatsAction = cache(async () => {
     // We reuse a permission check, e.g. listing users, to verify admin access
     await checkAdminPermission({ user: ["list"] });

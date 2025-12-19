@@ -19,6 +19,11 @@ export type CreateJobData = {
     status: "draft" | "published" | "closed";
 };
 
+/**
+ * Crea un nuovo annuncio di lavoro.
+ * Richiede che l'utente sia autenticato e membro dell'organizzazione.
+ * Genera automaticamente uno slug univoco e l'embedding per la ricerca semantica.
+ */
 export async function createJobAction(data: CreateJobData) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -64,6 +69,11 @@ export async function createJobAction(data: CreateJobData) {
     }
 }
 
+/**
+ * Recupera tutti gli annunci di lavoro di un'organizzazione.
+ * Richiede che l'utente sia autenticato e membro dell'organizzazione.
+ * Ordina i risultati per data di creazione decrescente.
+ */
 export async function getJobsAction(organizationId: string) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -93,6 +103,10 @@ export async function getJobsAction(organizationId: string) {
     }
 }
 
+/**
+ * Recupera un singolo annuncio di lavoro tramite ID.
+ * Richiede che l'utente sia autenticato e membro dell'organizzazione proprietaria dell'annuncio.
+ */
 export async function getJobAction(jobId: string) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -125,6 +139,11 @@ export async function getJobAction(jobId: string) {
     }
 }
 
+/**
+ * Recupera un annuncio di lavoro pubblico tramite slug.
+ * L'annuncio deve essere in stato "published".
+ * Include i dettagli dell'organizzazione.
+ */
 export async function getJobBySlugAction(slug: string) {
     try {
         const job = await db.query.jobPosting.findFirst({
@@ -207,6 +226,10 @@ export async function updateJobAction(jobId: string, data: Partial<CreateJobData
     }
 }
 
+/**
+ * Elimina un annuncio di lavoro.
+ * Richiede che l'utente sia autenticato e membro dell'organizzazione.
+ */
 export async function deleteJobAction(jobId: string) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });

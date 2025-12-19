@@ -11,6 +11,11 @@ import { z } from 'zod';
 import { revalidatePath } from "next/cache";
 import { createPresignedDownloadUrl } from "@/lib/supabase-storage";
 
+/**
+ * Esegue l'OCR su un file PDF tramite le API di Mistral.
+ * Recupera il file dall'URL fornito (convertendolo in base64 se necessario)
+ * e invia una richiesta a Mistral per estrarre il testo.
+ */
 async function runOCR(pdfUrl: string) {
     const apiKey = process.env.MISTRAL_API_KEY || process.env.AI_GATEWAY_API_KEY;
     if (!apiKey) throw new Error("Missing MISTRAL_API_KEY or AI_GATEWAY_API_KEY");
@@ -56,6 +61,11 @@ async function runOCR(pdfUrl: string) {
     }
 }
 
+/**
+ * Esegue il parsing di fallback del CV utilizzando OCR (Mistral) e AI.
+ * Scarica il PDF, estrae il testo tramite OCR, strutturalizza i dati con Mistral,
+ * genera un embedding e aggiorna il record del candidato nel database.
+ */
 export async function fallbackResumeParsingAction(candidateId: string, resumeKey: string) {
     try {
         console.log("N8N_PARSING_WEBHOOK_URL not set. Using Mistral OCR fallback...");
@@ -131,6 +141,10 @@ export async function fallbackResumeParsingAction(candidateId: string, resumeKey
     }
 }
 
+/**
+ * Genera un embedding vettoriale per una stringa di testo utilizzando il modello 'text-embedding-3-small'.
+ * Utilizzato per creare rappresentazioni semantiche di CV e Job Description.
+ */
 export async function generateEmbedding(text: string) {
     try {
         const { embedding } = await embed({
@@ -144,6 +158,11 @@ export async function generateEmbedding(text: string) {
     }
 }
 
+/**
+ * Trova i candidati più compatibili per una specifica offerta di lavoro (Job Posting).
+ * Utilizza la ricerca vettoriale (cosine distance) tra l'embedding della JD e quelli dei candidati
+ * per restituire i profili più pertinenti ordinati per similarità.
+ */
 export async function findMatchingCandidatesAction(jobId: string, limit: number = 10) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -193,6 +212,11 @@ export async function findMatchingCandidatesAction(jobId: string, limit: number 
     }
 }
 
+/**
+ * Genera un'analisi dettagliata del match tra un candidato e una job posting.
+ * Utilizza GPT-4o per confrontare le competenze del candidato con i requisiti dell'offerta,
+ * fornendo uno score (0-100), un'analisi testuale, punti di forza e debolezze.
+ */
 export async function generateMatchAnalysisAction(applicationId: string) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -290,6 +314,11 @@ export async function generateMatchAnalysisAction(applicationId: string) {
     }
 }
 
+/**
+ * Attiva il workflow asincrono (n8n) per il parsing del CV di un candidato.
+ * Verifica che l'utente abbia i permessi necessari (sia membro dell'organizzazione che ha ricevuto la candidatura)
+ * e invia una richiesta al webhook configurato per l'elaborazione del file.
+ */
 export async function triggerCandidateParsingAction(candidateId: string) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -385,6 +414,11 @@ export async function triggerCandidateParsingAction(candidateId: string) {
     }
 }
 
+/**
+ * Attiva il workflow asincrono (n8n) per l'analisi di una Job Posting.
+ * Invia i dettagli dell'offerta al webhook per generare embedding e strutturare i requisiti,
+ * aggiornando poi il database.
+ */
 export async function triggerJobParsingAction(jobId: string) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });

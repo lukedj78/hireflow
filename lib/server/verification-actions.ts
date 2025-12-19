@@ -4,6 +4,11 @@ import { db } from "@/lib/db";
 import { verification, user as userTable } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
+/**
+ * Verifica l'indirizzo email di un utente tramite un token.
+ * Controlla la validità e la scadenza del token.
+ * Se valido, segna l'email come verificata e rimuove il token.
+ */
 export async function verifyEmailAction(token: string) {
   try {
     const tokenData = await db.query.verification.findFirst({

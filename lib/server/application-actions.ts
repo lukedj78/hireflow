@@ -20,6 +20,11 @@ export type SubmitApplicationData = {
     resumeType?: string;
 };
 
+/**
+ * Invia una nuova candidatura per un'offerta di lavoro.
+ * Gestisce l'upload/aggiornamento del CV e crea il record della candidatura.
+ * Attiva un evento 'application.created' per notificare il sistema.
+ */
 export async function submitApplicationAction(data: SubmitApplicationData) {
     // 1. Verify Authentication
     const session = await auth.api.getSession({ headers: await headers() });
@@ -141,6 +146,10 @@ export async function submitApplicationAction(data: SubmitApplicationData) {
     return { success: true };
 }
 
+/**
+ * Aggiorna lo stato di una candidatura (es. da 'applied' a 'screening').
+ * Verifica i permessi dell'utente e attiva un evento 'application.status_updated'.
+ */
 export async function updateApplicationStatusAction(applicationId: string, status: "applied" | "screening" | "interview" | "offer" | "hired" | "rejected") {
     try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -191,6 +200,10 @@ export async function updateApplicationStatusAction(applicationId: string, statu
     }
 }
 
+/**
+ * Elimina una candidatura dal sistema.
+ * Verifica i permessi dell'utente prima di procedere.
+ */
 export async function deleteApplicationAction(applicationId: string) {
     try {
         const session = await auth.api.getSession({ headers: await headers() });
@@ -232,6 +245,10 @@ export async function deleteApplicationAction(applicationId: string) {
     }
 }
 
+/**
+ * Recupera tutte le candidature per una specifica offerta di lavoro.
+ * Include i dettagli del candidato e il suo CV più recente.
+ */
 export async function getJobApplicationsAction(jobId: string) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) {
@@ -293,6 +310,9 @@ export async function getJobApplicationsAction(jobId: string) {
     return applications;
 }
 
+/**
+ * Recupera i dettagli di una singola candidatura, inclusi i dati del candidato e dell'offerta di lavoro.
+ */
 export async function getApplicationAction(applicationId: string) {
     const session = await auth.api.getSession({ headers: await headers() });
     if (!session) {

@@ -4,8 +4,9 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, CircleNotchIcon, VideoIcon } from "@phosphor-icons/react";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -27,6 +28,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { createInterviewAction } from "@/lib/server/interview-actions";
 import { Form } from "@/components/ui/form";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const formSchema = z.object({
     date: z.date(),
@@ -34,8 +37,10 @@ const formSchema = z.object({
     duration: z.preprocess((val) => Number(val), z.number().min(15).max(240)),
     location: z.string().optional(),
     meetingLink: z.string().url("Invalid URL").optional().or(z.literal("")),
+    generateMeetingLink: z.boolean().default(false),
     notes: z.string().optional(),
 });
+
 
 interface ScheduleInterviewDialogProps {
     applicationId: string;
@@ -52,6 +57,7 @@ export function ScheduleInterviewDialog({
     open,
     onOpenChange,
 }: ScheduleInterviewDialogProps) {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const show = open !== undefined ? open : isOpen;
     const setShow = onOpenChange || setIsOpen;
@@ -64,6 +70,7 @@ export function ScheduleInterviewDialog({
             duration: 60,
             location: "Remote (Google Meet / Zoom)",
             meetingLink: "",
+            generateMeetingLink: false,
             notes: "",
         },
     });
@@ -89,16 +96,18 @@ export function ScheduleInterviewDialog({
                 location: values.location,
                 meetingLink: values.meetingLink || undefined,
                 notes: values.notes,
+                generateMeetingLink: values.generateMeetingLink,
             });
 
             if (result.success) {
                 toast.success("Interview scheduled successfully");
                 setShow(false);
                 form.reset();
+                router.refresh();
             } else {
                 toast.error(result.error || "Failed to schedule interview");
             }
-        } catch (error) {
+        } catch {
             toast.error("An unexpected error occurred");
         }
     }
@@ -142,10 +151,9 @@ export function ScheduleInterviewDialog({
                                                     mode="single"
                                                     selected={field.value}
                                                     onSelect={field.onChange}
-                                                    disabled={(date) =>
-                                                        date < new Date() || date < new Date("1900-01-01")
-                                                    }
-                                                    initialFocus
+                                            disabled={(date) =>
+                                                date < new Date() || date < new Date("1900-01-01")
+                                            }
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -193,6 +201,28 @@ export function ScheduleInterviewDialog({
 
                         <FormField
                             control={form.control}
+                            name="generateMeetingLink"
+                            render={({ field }) => (
+                                <div className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                                    <div className="space-y-0.5">
+                                        <div className="flex items-center gap-2">
+                                            <VideoIcon className="h-4 w-4 text-primary" />
+                                            <Label className="text-base">Auto-generate Video Link</Label>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                            Automatically create a video meeting room (Mock/Daily/LiveKit)
+                                        </div>
+                                    </div>
+                                    <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                    />
+                                </div>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
                             name="meetingLink"
                             render={({ field, fieldState }) => (
                                 <Field>
@@ -221,7 +251,7 @@ export function ScheduleInterviewDialog({
 
                         <DialogFooter>
                             <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isSubmitting && <CircleNotchIcon className="mr-2 h-4 w-4 animate-spin" />}
                                 Schedule Interview
                             </Button>
                         </DialogFooter>

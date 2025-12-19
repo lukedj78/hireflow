@@ -61,6 +61,10 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
             {
                 title: "General",
                 url: "/admin/settings",
+            },
+            {
+                title: "Email Previews",
+                url: "/admin/settings/email-previews",
             }
         ]
     }

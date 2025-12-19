@@ -3,12 +3,59 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { candidate, candidateFile } from "@/lib/db/schema";
+import { candidate, candidateFile, jobPosting } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 import { createPresignedDownloadUrl, deleteFile } from "@/lib/supabase-storage";
 import { fallbackResumeParsingAction } from "./ai-actions";
+import { NotificationService } from "@/lib/services/notification-service";
+
+/**
+ * Invia una manifestazione di interesse a un candidato per una specifica posizione.
+ * Invia un'email e registra l'evento nel log delle comunicazioni.
+ */
+export async function sendInterestAction({ 
+    candidateId, 
+    jobId, 
+    message 
+}: { 
+    candidateId: string, 
+    jobId: string, 
+    message?: string 
+}) {
+    try {
+        const session = await auth.api.getSession({ headers: await headers() });
+        if (!session) return { success: false, error: "Unauthorized" };
+
+        const targetCandidate = await db.query.candidate.findFirst({
+            where: eq(candidate.id, candidateId),
+        });
+
+        if (!targetCandidate) return { success: false, error: "Candidate not found" };
+
+        const job = await db.query.jobPosting.findFirst({
+            where: eq(jobPosting.id, jobId),
+            with: {
+                organization: true
+            }
+        });
+
+        if (!job) return { success: false, error: "Job not found" };
+
+        await NotificationService.handleCandidateInterest({
+            candidate: targetCandidate,
+            job: job,
+            recruiterId: session.user.id,
+            message: message
+        });
+
+        return { success: true };
+    } catch (error) {
+        console.error("Error sending interest:", error);
+        return { success: false, error: "Failed to send interest" };
+    }
+}
 
 /**
  * Recupera il profilo del candidato associato all'utente corrente.
@@ -36,6 +83,7 @@ export async function getCandidateProfileAction() {
         return null;
     }
 }
+
 
 /**
  * Imposta un file (CV) specifico come CV predefinito per il candidato.

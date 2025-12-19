@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { format } from "date-fns";
-import { CalendarIcon, ClockIcon, MapPinIcon, LinkIcon, TrashIcon, UserIcon, Edit2Icon } from "lucide-react";
+import { CalendarIcon, ClockIcon, MapPinIcon, LinkIcon, TrashIcon, UserIcon, PencilIcon, ClipboardTextIcon } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { deleteInterviewAction } from "@/lib/server/interview-actions";
 import { Interview, User } from "@/lib/db/schema";
 import { EditInterviewDialog } from "./edit-interview-dialog";
+import { InterviewReportDialog } from "./interview-report-dialog";
 
 type InterviewWithOrganizer = Interview & {
     organizer: User;
@@ -39,8 +41,10 @@ interface InterviewListProps {
 }
 
 export function InterviewList({ interviews }: InterviewListProps) {
+    const router = useRouter();
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
     const [editingInterview, setEditingInterview] = useState<InterviewWithOrganizer | null>(null);
+    const [reportingInterview, setReportingInterview] = useState<InterviewWithOrganizer | null>(null);
 
     const handleDelete = async (interviewId: string) => {
         setIsDeleting(interviewId);
@@ -48,10 +52,11 @@ export function InterviewList({ interviews }: InterviewListProps) {
             const result = await deleteInterviewAction(interviewId);
             if (result.success) {
                 toast.success("Interview cancelled successfully");
+                router.refresh();
             } else {
                 toast.error(result.error || "Failed to cancel interview");
             }
-        } catch (error) {
+        } catch {
             toast.error("An unexpected error occurred");
         } finally {
             setIsDeleting(null);
@@ -131,9 +136,18 @@ export function InterviewList({ interviews }: InterviewListProps) {
                             <Button 
                                 variant="ghost" 
                                 size="sm" 
+                                onClick={() => setReportingInterview(interview)}
+                            >
+                                <ClipboardTextIcon className="h-4 w-4 mr-2" />
+                                Report
+                            </Button>
+
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
                                 onClick={() => setEditingInterview(interview)}
                             >
-                                <Edit2Icon className="h-4 w-4 mr-2" />
+                                <PencilIcon className="h-4 w-4 mr-2" />
                                 Edit
                             </Button>
 
@@ -153,7 +167,7 @@ export function InterviewList({ interviews }: InterviewListProps) {
                                         <AlertDialogCancel>Keep it</AlertDialogCancel>
                                         <AlertDialogAction 
                                             onClick={() => handleDelete(interview.id)}
-                                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            className="bg-destructive hover:bg-destructive/90"
                                         >
                                             {isDeleting === interview.id ? "Cancelling..." : "Yes, Cancel"}
                                         </AlertDialogAction>
@@ -170,6 +184,14 @@ export function InterviewList({ interviews }: InterviewListProps) {
                     interview={editingInterview} 
                     open={!!editingInterview} 
                     onOpenChange={(open) => !open && setEditingInterview(null)} 
+                />
+            )}
+
+            {reportingInterview && (
+                <InterviewReportDialog
+                    interview={reportingInterview}
+                    open={!!reportingInterview}
+                    onOpenChange={(open) => !open && setReportingInterview(null)}
                 />
             )}
         </div>

@@ -1,5 +1,19 @@
 "use client";
 
+import { useState } from "react";
+import { toast } from "sonner";
+import { sendInterestAction } from "@/lib/server/candidate-actions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Spinner } from "@/components/ui/spinner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -50,6 +64,31 @@ interface CandidateClientPageProps {
 }
 
 export default function CandidateClientPage({ candidate, organizationId, jobId }: CandidateClientPageProps) {
+    const [isInterestDialogOpen, setIsInterestDialogOpen] = useState(false);
+    const [interestMessage, setInterestMessage] = useState("");
+    const [isSendingInterest, setIsSendingInterest] = useState(false);
+
+    async function handleSendInterest() {
+        setIsSendingInterest(true);
+        try {
+            const result = await sendInterestAction({
+                candidateId: candidate.id,
+                jobId: jobId,
+                message: interestMessage
+            });
+
+            if (result.success) {
+                toast.success("Interest sent successfully!");
+                setIsInterestDialogOpen(false);
+            } else {
+                toast.error(result.error || "Failed to send interest");
+            }
+        } catch (error) {
+            toast.error("An unexpected error occurred");
+        } finally {
+            setIsSendingInterest(false);
+        }
+    }
     
     // Helper to safely parse JSON
     const safeParse = <T,>(data: string | null | undefined | object, fallback: T): T => {
@@ -118,7 +157,41 @@ export default function CandidateClientPage({ candidate, organizationId, jobId }
                             </Link>
                         </Button>
                     )}
-                    <Button>Invite to Apply</Button>
+                    <Dialog open={isInterestDialogOpen} onOpenChange={setIsInterestDialogOpen}>
+                        <DialogTrigger render={<Button variant="default">Invite to Apply</Button>} />
+                        <DialogContent className="sm:max-w-[500px]">
+                            <DialogHeader>
+                                <DialogTitle>Send Interest</DialogTitle>
+                                <DialogDescription>
+                                    Let the candidate know you are interested in their profile. They will receive a notification and email inviting them to apply for this position.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4">
+                                <Textarea 
+                                    placeholder="Add a personalized message (optional)..." 
+                                    className="min-h-[150px]"
+                                    value={interestMessage}
+                                    onChange={(e) => setInterestMessage(e.target.value)}
+                                />
+                            </div>
+                            <DialogFooter>
+                                <Button variant="outline" onClick={() => setIsInterestDialogOpen(false)}>Cancel</Button>
+                                <Button onClick={handleSendInterest} disabled={isSendingInterest}>
+                                    {isSendingInterest ? (
+                                        <>
+                                            <Spinner className="mr-2" />
+                                            Sending...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <EnvelopeIcon className="mr-2 h-4 w-4" />
+                                            Send Invitation
+                                        </>
+                                    )}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
                 </div>
             </div>
 

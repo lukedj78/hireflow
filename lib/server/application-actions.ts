@@ -9,6 +9,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createPresignedDownloadUrl } from "../supabase-storage";
+import { NotificationService } from "@/lib/services/notification-service";
+
 
 export type SubmitApplicationData = {
     jobSlug: string;
@@ -24,6 +26,7 @@ export type SubmitApplicationData = {
  * Invia una nuova candidatura per un'offerta di lavoro.
  * Gestisce l'upload/aggiornamento del CV e crea il record della candidatura.
  * Attiva un evento 'application.created' per notificare il sistema.
+ * Notifica anche i membri dell'organizzazione.
  */
 export async function submitApplicationAction(data: SubmitApplicationData) {
     // 1. Verify Authentication
@@ -35,6 +38,9 @@ export async function submitApplicationAction(data: SubmitApplicationData) {
     // 2. Find the job
     const job = await db.query.jobPosting.findFirst({
         where: eq(jobPosting.slug, data.jobSlug),
+        with: {
+            organization: true
+        }
     });
 
     if (!job) {
@@ -124,6 +130,13 @@ export async function submitApplicationAction(data: SubmitApplicationData) {
         status: "applied",
     }).returning();
 
+    // 7. Notify via NotificationService
+    await NotificationService.handleApplicationCreated({
+        applicationId: newApplication.id,
+        candidate: existingCandidate,
+        job: job
+    });
+
     // Trigger event for n8n workflow
     let resumeUrl = data.resumeUrl;
     // Generate signed URL if we have a key (new upload)
@@ -160,7 +173,12 @@ export async function updateApplicationStatusAction(applicationId: string, statu
         const app = await db.query.application.findFirst({
             where: eq(application.id, applicationId),
             with: {
-                jobPosting: true
+                jobPosting: {
+                    with: {
+                        organization: true
+                    }
+                },
+                candidate: true // Add candidate relation
             }
         });
 
@@ -185,10 +203,20 @@ export async function updateApplicationStatusAction(applicationId: string, statu
             .where(eq(application.id, applicationId))
             .returning();
 
+        // Notify via NotificationService
+        await NotificationService.handleApplicationStatusUpdated({
+            applicationId: app.id,
+            status: status,
+            candidate: app.candidate,
+            job: app.jobPosting
+        });
+
         // Trigger workflow event
         await triggerWorkflow("application.status_updated", {
             application: updatedApp,
-            previousStatus: app.status
+            previousStatus: app.status,
+            candidate: app.candidate, // Ensure candidate details are passed for email
+            job: app.jobPosting
         });
 
         revalidatePath(`/dashboard/${app.jobPosting.organizationId}/jobs/${app.jobPosting.id}/applications`);

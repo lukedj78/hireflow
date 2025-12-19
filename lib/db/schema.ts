@@ -156,7 +156,10 @@ export const interview = sqliteTable("interview", {
     status: text("status", { enum: ["scheduled", "completed", "cancelled", "rescheduled"] }).notNull().default("scheduled"),
     location: text("location"),
     meetingLink: text("meeting_link"),
+    meetingProvider: text("meeting_provider"), // 'mock', 'daily', 'livekit', etc.
+    meetingMetadata: text("meeting_metadata", { mode: "json" }), // JSON object for provider-specific data
     notes: text("notes"),
+    feedbackReport: text("feedback_report"), // AI generated report
     createdAt: integer("created_at", { mode: "timestamp_ms" })
         .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
         .notNull(),
@@ -306,12 +309,38 @@ export const application = sqliteTable("application", {
         .notNull(),
 });
 
+export const communicationLog = sqliteTable("communication_log", {
+    id: text("id").primaryKey(),
+    type: text("type", { enum: ["email", "notification", "interest"] }).notNull(),
+    candidateId: text("candidate_id").references(() => candidate.id, { onDelete: "cascade" }),
+    jobPostingId: text("job_posting_id").references(() => jobPosting.id, { onDelete: "cascade" }),
+    userId: text("user_id").notNull().references(() => user.id),
+    subject: text("subject"),
+    content: text("content"),
+    metadata: text("metadata", { mode: "json" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+        .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+        .notNull(),
+    readAt: integer("read_at", { mode: "timestamp_ms" }),
+});
+
+export const userSettings = sqliteTable("user_settings", {
+    userId: text("user_id").primaryKey().references(() => user.id, { onDelete: "cascade" }),
+    emailNotifications: integer("email_notifications", { mode: "boolean" }).default(true).notNull(),
+    inAppNotifications: integer("in_app_notifications", { mode: "boolean" }).default(true).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+        .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+        .$onUpdate(() => new Date())
+        .notNull(),
+});
+
 export const jobPostingRelations = relations(jobPosting, ({ one, many }) => ({
     organization: one(organization, {
         fields: [jobPosting.organizationId],
         references: [organization.id],
     }),
     applications: many(application),
+    communications: many(communicationLog),
 }));
 
 export type JobPosting = typeof jobPosting.$inferSelect;
@@ -320,6 +349,7 @@ export type Candidate = typeof candidate.$inferSelect;
 export type CandidateFile = typeof candidateFile.$inferSelect;
 export type Interview = typeof interview.$inferSelect;
 export type User = typeof user.$inferSelect;
+export type CommunicationLog = typeof communicationLog.$inferSelect;
 
 export const candidateRelations = relations(candidate, ({ one, many }) => ({
     user: one(user, {
@@ -329,6 +359,7 @@ export const candidateRelations = relations(candidate, ({ one, many }) => ({
     applications: many(application),
     files: many(candidateFile),
     interviews: many(interview),
+    communications: many(communicationLog),
 }));
 
 export const candidateFileRelations = relations(candidateFile, ({ one }) => ({
@@ -411,6 +442,28 @@ export const organizationInvitationRelations = relations(organizationInvitation,
     }),
 }));
 
+export const communicationLogRelations = relations(communicationLog, ({ one }) => ({
+    candidate: one(candidate, {
+        fields: [communicationLog.candidateId],
+        references: [candidate.id],
+    }),
+    jobPosting: one(jobPosting, {
+        fields: [communicationLog.jobPostingId],
+        references: [jobPosting.id],
+    }),
+    user: one(user, {
+        fields: [communicationLog.userId],
+        references: [user.id],
+    }),
+}));
+
+export const userSettingsRelations = relations(userSettings, ({ one }) => ({
+    user: one(user, {
+        fields: [userSettings.userId],
+        references: [user.id],
+    }),
+}));
+
 export const userRelations = relations(user, ({ one, many }) => ({
     sessions: many(session),
     accounts: many(account),
@@ -418,4 +471,6 @@ export const userRelations = relations(user, ({ one, many }) => ({
     invitations: many(organizationInvitation),
     teamMembers: many(teamMember),
     candidate: one(candidate),
+    communications: many(communicationLog),
+    settings: one(userSettings),
 }));

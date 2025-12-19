@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, CircleNotchIcon } from "@phosphor-icons/react";
 import { format } from "date-fns";
+import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -50,6 +51,7 @@ export function EditInterviewDialog({
     open,
     onOpenChange,
 }: EditInterviewDialogProps) {
+    const router = useRouter();
     const form = useForm<z.infer<typeof formSchema>>({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         resolver: zodResolver(formSchema) as any,
@@ -103,6 +105,7 @@ export function EditInterviewDialog({
             if (result.success) {
                 toast.success("Interview updated successfully");
                 onOpenChange(false);
+                router.refresh();
             } else {
                 toast.error(result.error || "Failed to update interview");
             }
@@ -148,9 +151,8 @@ export function EditInterviewDialog({
                                                     selected={field.value}
                                                     onSelect={field.onChange}
                                                     disabled={(date) =>
-                                                        date < new Date(new Date().setHours(0, 0, 0, 0))
+                                                        date < new Date() || date < new Date("1900-01-01")
                                                     }
-                                                    initialFocus
                                                 />
                                             </PopoverContent>
                                         </Popover>
@@ -252,7 +254,7 @@ export function EditInterviewDialog({
                                 Cancel
                             </Button>
                             <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isSubmitting && <CircleNotchIcon className="mr-2 h-4 w-4 animate-spin" />}
                                 Update Interview
                             </Button>
                         </DialogFooter>

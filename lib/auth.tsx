@@ -15,6 +15,8 @@ import { APIError } from "better-auth/api";
 import { polar, checkout, portal, usage, webhooks } from "@polar-sh/better-auth";
 import { Polar } from "@polar-sh/sdk";
 import { user, session, account, verification, organization as organizationSchema, organizationMember, organizationInvitation, team, teamMember } from "@/lib/db/schema";
+import { NotificationService } from "./services/notification-service";
+
 interface TeamContext {
     team: {
         name: string;
@@ -239,6 +241,12 @@ export const auth = betterAuth({
               }
             } catch (e) {
               console.error("Failed to update subscription status", e);
+              await NotificationService.handleSystemAlert({
+                subject: "Polar Subscription Update Failed",
+                message: `Failed to update subscription for customer ${customerId}: ${e instanceof Error ? e.message : String(e)}`,
+                severity: "high",
+                metadata: { source: "polar.webhook", event: "onSubscriptionActive", customerId }
+              });
             }
           },
           onSubscriptionRevoked: async (payload) => {
@@ -259,6 +267,12 @@ export const auth = betterAuth({
               }
             } catch (e) {
               console.error("Failed to revoke subscription status", e);
+              await NotificationService.handleSystemAlert({
+                subject: "Polar Subscription Revocation Failed",
+                message: `Failed to revoke subscription for customer ${customerId}: ${e instanceof Error ? e.message : String(e)}`,
+                severity: "high",
+                metadata: { source: "polar.webhook", event: "onSubscriptionRevoked", customerId }
+              });
             }
           }
         })

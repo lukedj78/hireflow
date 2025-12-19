@@ -8,6 +8,7 @@ import { account, user, organization, team } from "@/lib/db/schema";
 import { eq, and, count, sql } from "drizzle-orm";
 import { adminRole } from "@/lib/permissions";
 import { cache } from "react";
+import { NotificationService } from "@/lib/services/notification-service";
 
 async function checkAdminPermission(permission: Record<string, string[]>) {
     const session = await auth.api.getSession({ headers: await headers() });

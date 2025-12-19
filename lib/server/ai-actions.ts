@@ -1,15 +1,18 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { candidate, jobPosting, application, organizationMember } from "@/lib/db/schema";
+import { candidate, jobPosting, application, organizationMember, interview, communicationLog } from "@/lib/db/schema";
 import { eq, sql, and } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { generateObject, embed } from 'ai';
+import { generateObject, embed, generateText } from 'ai';
 import { mistral } from '@ai-sdk/mistral';
 import { z } from 'zod';
 import { revalidatePath } from "next/cache";
 import { createPresignedDownloadUrl } from "@/lib/supabase-storage";
+import { nanoid } from "nanoid";
+import { triggerWorkflow } from "@/lib/events";
+import { NotificationService } from "@/lib/services/notification-service";
 
 /**
  * Esegue l'OCR su un file PDF tramite le API di Mistral.
@@ -61,11 +64,40 @@ async function runOCR(pdfUrl: string) {
     }
 }
 
-/**
- * Esegue il parsing di fallback del CV utilizzando OCR (Mistral) e AI.
- * Scarica il PDF, estrae il testo tramite OCR, strutturalizza i dati con Mistral,
- * genera un embedding e aggiorna il record del candidato nel database.
- */
+export async function parseJobDescriptionAction(description: string) {
+    try {
+        const session = await auth.api.getSession({
+            headers: await headers()
+        });
+
+        if (!session) {
+            return { success: false, error: "Unauthorized" };
+        }
+
+        const schema = z.object({
+            title: z.string().describe("The job title"),
+            location: z.string().describe("The job location (city, state, country or 'Remote')"),
+            type: z.enum(["remote", "onsite", "hybrid"]).describe("The work type"),
+            salaryRange: z.string().describe("The salary range if mentioned, otherwise 'Competitive' or 'Not specified'"),
+            description: z.string().describe("A clean, formatted markdown description of the job responsibilities and requirements"),
+        });
+
+        const { object } = await generateObject({
+            model: mistral("mistral-large-latest"),
+            schema: schema,
+            prompt: `Extract the job details from the following job description. Format the description in clean Markdown.
+            
+            Job Description:
+            ${description}`
+        });
+
+        return { success: true, data: object };
+    } catch (error) {
+        console.error("parseJobDescriptionAction failed:", error);
+        return { success: false, error: "Failed to parse job description" };
+    }
+}
+
 export async function fallbackResumeParsingAction(candidateId: string, resumeKey: string) {
     try {
         console.log("N8N_PARSING_WEBHOOK_URL not set. Using Mistral OCR fallback...");
@@ -307,6 +339,36 @@ export async function generateMatchAnalysisAction(applicationId: string) {
             `,
         });
 
+        // SAVE TO DB
+        await db.update(application)
+            .set({
+                aiScore: object.score,
+                aiAnalysis: JSON.stringify(object),
+                updatedAt: new Date()
+            })
+            .where(eq(application.id, applicationId));
+
+        // NOTIFICATIONS
+        if (object.score >= 75) {
+            await NotificationService.handleHighMatchAlert({
+                applicationId: app.id,
+                score: object.score,
+                analysis: object.analysis,
+                candidate: app.candidate,
+                job: app.jobPosting
+            });
+        }
+
+        // Trigger workflow event
+        await triggerWorkflow("application.analysis_completed", {
+            application: { ...app, aiScore: object.score, aiAnalysis: object },
+            analysis: object,
+            candidate: app.candidate,
+            job: app.jobPosting
+        });
+
+        revalidatePath(`/dashboard/${app.jobPosting.organizationId}/jobs/${app.jobPosting.id}/applications/${applicationId}`);
+
         return { success: true, data: object };
     } catch (error) {
         console.error("generateMatchAnalysisAction failed:", error);
@@ -411,6 +473,99 @@ export async function triggerCandidateParsingAction(candidateId: string) {
     } catch (error) {
         console.error("triggerCandidateParsingAction failed:", error);
         return { success: false, error: error instanceof Error ? error.message : "Failed to trigger parsing workflow" };
+    }
+}
+
+/**
+ * Genera un report professionale dell'intervista utilizzando l'AI (Mistral).
+ * Richiede che siano presenti delle note per l'intervista.
+ * Aggiorna il record dell'intervista con il report generato.
+ */
+export async function generateInterviewReportAction(interviewId: string) {
+    try {
+        const session = await auth.api.getSession({ headers: await headers() });
+        if (!session) {
+            throw new Error("Unauthorized");
+        }
+
+        const interviewRecord = await db.query.interview.findFirst({
+            where: eq(interview.id, interviewId),
+            with: {
+                job: {
+                    columns: {
+                        title: true,
+                        organizationId: true,
+                    }
+                },
+                candidate: {
+                    columns: {
+                        name: true,
+                    }
+                },
+                organizer: {
+                    columns: {
+                        name: true,
+                    }
+                }
+            }
+        });
+
+        if (!interviewRecord) {
+            throw new Error("Interview not found");
+        }
+
+        // Verify permissions
+        const membership = await db.query.organizationMember.findFirst({
+            where: and(
+                eq(organizationMember.organizationId, interviewRecord.job.organizationId),
+                eq(organizationMember.userId, session.user.id)
+            )
+        });
+
+        if (!membership) {
+            throw new Error("Unauthorized");
+        }
+
+        if (!interviewRecord.notes) {
+            throw new Error("No notes found for this interview. Please add notes first.");
+        }
+
+        const interviewDate = new Date(interviewRecord.startTime).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+        const prompt = `
+            You are an expert HR recruiter.
+            Create a professional interview report for candidate ${interviewRecord.candidate.name} applying for the position of ${interviewRecord.job.title}.
+            
+            Based on the following interviewer notes, summarize the candidate's performance, strengths, weaknesses, and provide a recommendation.
+
+            The report MUST start with these exact lines:
+            **Date:** ${interviewDate}
+            **Interviewer:** ${interviewRecord.organizer.name}
+            
+            Interviewer Notes:
+            ${interviewRecord.notes}
+            
+            The report should be structured with markdown (headers, bullet points).
+            Keep it concise but informative.
+        `;
+
+        const { text } = await generateText({
+            model: mistral('mistral-large-latest'),
+            prompt: prompt,
+        });
+        
+        await db.update(interview)
+            .set({ feedbackReport: text })
+            .where(eq(interview.id, interviewId));
+            
+        revalidatePath(`/dashboard/${interviewRecord.job.organizationId}/jobs/${interviewRecord.jobId}/applications/${interviewRecord.applicationId}`);
+        revalidatePath("/[locale]/dashboard/[organizationId]/jobs/[jobId]/applications/[applicationId]", "page");
+        
+        return { success: true, data: text };
+
+    } catch (error) {
+        console.error("generateInterviewReportAction error:", error);
+        return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
     }
 }
 

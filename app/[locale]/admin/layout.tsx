@@ -18,8 +18,9 @@ import {
 import { useSession } from "@/lib/auth-client"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
-import { SpinnerGap } from "@phosphor-icons/react"
 import { ForbiddenError } from "@/components/forbidden-error"
+
+import { NotificationBell } from "@/components/notifications/notification-bell"
 
 export default function AdminLayout({
   children,
@@ -34,14 +35,6 @@ export default function AdminLayout({
       router.push("/auth/sign-in")
     }
   }, [session, isPending, router])
-
-  if (isPending) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <SpinnerGap className="h-8 w-8 animate-spin" />
-      </div>
-    )
-  }
 
   if (!session) return null
 
@@ -68,6 +61,9 @@ export default function AdminLayout({
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
+          </div>
+          <div className="ml-auto px-4">
+             <NotificationBell />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

@@ -8,6 +8,7 @@ import { eq, and, desc } from "drizzle-orm";
 import { orgOwnerRole, orgAdminRole, orgMemberRole } from "@/lib/permissions";
 import { APIError } from "better-auth/api";
 import { cache } from "react";
+import { NotificationService } from "@/lib/services/notification-service";
 
 /**
  * Recupera l'organizzazione attiva dalla sessione corrente.
@@ -102,13 +103,28 @@ export async function createOrganizationAction(data: {
   logo?: string;
   metadata?: Record<string, unknown>;
 }) {
-  return await auth.api.createOrganization({
+  const org = await auth.api.createOrganization({
     body: {
         ...data,
         metadata: data.metadata || {}
     },
     headers: await headers(),
   });
+
+  if (org) {
+      const session = await auth.api.getSession({ headers: await headers() });
+      if (session?.user) {
+          // Notify admins about new organization
+          await NotificationService.handleOrganizationCreated({
+              organizationId: org.id,
+              name: org.name,
+              slug: org.slug,
+              ownerId: session.user.id
+          });
+      }
+  }
+
+  return org;
 }
 
 /**

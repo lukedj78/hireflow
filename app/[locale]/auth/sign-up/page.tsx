@@ -33,8 +33,26 @@ export default function SignUpPage() {
       })
 
       if (!response || response.error) {
-        setError(response?.error?.message || t('signUp.errors.default'))
-        console.error("[v0] Sign up error:", response?.error)
+        const errorMsg = response?.error?.message || t('signUp.errors.default')
+        setError(errorMsg)
+        console.error("[v0] Sign up error details:", {
+            error: response?.error,
+            status: response?.error?.status,
+            statusText: response?.error?.statusText
+        })
+
+        // Attempt to log non-enumerable properties if it's an Error object
+         if (response?.error) {
+           try {
+             console.error("[v0] Sign up error properties:", Object.getOwnPropertyNames(response.error).reduce((acc, key) => {
+               const err = response.error as unknown as Record<string, unknown>;
+               acc[key] = err[key];
+               return acc
+             }, {} as Record<string, unknown>))
+           } catch (e) {
+             console.error("[v0] Failed to inspect error object:", e)
+           }
+         }
       } else {
         router.push("/dashboard")
       }

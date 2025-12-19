@@ -1,6 +1,6 @@
 "use client";
 
-import { Application, Candidate, JobPosting } from "@/lib/db/schema";
+import { Application, Candidate, JobPosting, Interview, User, CandidateFile } from "@/lib/db/schema";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,15 +15,29 @@ import { SparkleIcon, CircleNotchIcon, ThumbsUpIcon, ThumbsDownIcon, TargetIcon 
 import { useState } from "react";
 import { PageLayout } from "@/components/page-layout";
 import { PageHeader } from "@/components/page-header";
+import { ScheduleInterviewDialog } from "@/components/interviews/schedule-interview-dialog";
+import { InterviewList } from "@/components/interviews/interview-list";
 
 type ApplicationWithRelations = Application & {
-    candidate: Candidate;
-    jobPosting: JobPosting;
+    candidate: Omit<Candidate, "embedding"> & {
+        files?: CandidateFile[];
+    };
+    jobPosting: Omit<JobPosting, "embedding">;
+};
+
+type InterviewWithOrganizer = Interview & {
+    organizer: User;
 };
 
 type ApplicationStatus = "applied" | "screening" | "interview" | "offer" | "hired" | "rejected";
 
-export default function ApplicationDetailClientPage({ application }: { application: ApplicationWithRelations }) {
+export default function ApplicationDetailClientPage({ 
+    application,
+    interviews = [] 
+}: { 
+    application: ApplicationWithRelations,
+    interviews?: InterviewWithOrganizer[]
+}) {
     const router = useRouter();
     const [isParsing, setIsParsing] = useState(false);
     const [isMatching, setIsMatching] = useState(false);
@@ -72,6 +86,13 @@ export default function ApplicationDetailClientPage({ application }: { applicati
                 title={application.candidate.name}
                 description={`Applying for ${application.jobPosting.title}`}
                 backHref={`/dashboard/${application.jobPosting.organizationId}/jobs/${application.jobPostingId}/applications`}
+                actions={
+                    <ScheduleInterviewDialog 
+                        applicationId={application.id} 
+                        candidateId={application.candidateId} 
+                        jobId={application.jobPostingId} 
+                    />
+                }
             />
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -195,6 +216,8 @@ export default function ApplicationDetailClientPage({ application }: { applicati
                             </CardContent>
                         </Card>
                     )}
+
+                    <InterviewList interviews={interviews} />
                 </div>
 
                 <div className="space-y-6">

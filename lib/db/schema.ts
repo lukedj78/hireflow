@@ -145,6 +145,27 @@ export const organization = sqliteTable("organization", {
         .notNull(),
 });
 
+export const interview = sqliteTable("interview", {
+    id: text("id").primaryKey(),
+    applicationId: text("application_id").notNull().references(() => application.id, { onDelete: "cascade" }),
+    organizerId: text("organizer_id").notNull().references(() => user.id),
+    candidateId: text("candidate_id").notNull().references(() => candidate.id),
+    jobId: text("job_id").notNull().references(() => jobPosting.id),
+    startTime: integer("start_time", { mode: "timestamp_ms" }).notNull(),
+    endTime: integer("end_time", { mode: "timestamp_ms" }).notNull(),
+    status: text("status", { enum: ["scheduled", "completed", "cancelled", "rescheduled"] }).notNull().default("scheduled"),
+    location: text("location"),
+    meetingLink: text("meeting_link"),
+    notes: text("notes"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+        .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+        .notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+        .default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+        .$onUpdate(() => new Date())
+        .notNull(),
+});
+
 export const organizationMember = sqliteTable("organization_member", {
     id: text("id").primaryKey(),
     role: text("role", { enum: ["owner", "admin", "member"] }).notNull(),
@@ -297,6 +318,8 @@ export type JobPosting = typeof jobPosting.$inferSelect;
 export type Application = typeof application.$inferSelect;
 export type Candidate = typeof candidate.$inferSelect;
 export type CandidateFile = typeof candidateFile.$inferSelect;
+export type Interview = typeof interview.$inferSelect;
+export type User = typeof user.$inferSelect;
 
 export const candidateRelations = relations(candidate, ({ one, many }) => ({
     user: one(user, {
@@ -305,6 +328,7 @@ export const candidateRelations = relations(candidate, ({ one, many }) => ({
     }),
     applications: many(application),
     files: many(candidateFile),
+    interviews: many(interview),
 }));
 
 export const candidateFileRelations = relations(candidateFile, ({ one }) => ({
@@ -314,7 +338,7 @@ export const candidateFileRelations = relations(candidateFile, ({ one }) => ({
     }),
 }));
 
-export const applicationRelations = relations(application, ({ one }) => ({
+export const applicationRelations = relations(application, ({ one, many }) => ({
     jobPosting: one(jobPosting, {
         fields: [application.jobPostingId],
         references: [jobPosting.id],
@@ -322,6 +346,26 @@ export const applicationRelations = relations(application, ({ one }) => ({
     candidate: one(candidate, {
         fields: [application.candidateId],
         references: [candidate.id],
+    }),
+    interviews: many(interview),
+}));
+
+export const interviewRelations = relations(interview, ({ one }) => ({
+    application: one(application, {
+        fields: [interview.applicationId],
+        references: [application.id],
+    }),
+    organizer: one(user, {
+        fields: [interview.organizerId],
+        references: [user.id],
+    }),
+    candidate: one(candidate, {
+        fields: [interview.candidateId],
+        references: [candidate.id],
+    }),
+    job: one(jobPosting, {
+        fields: [interview.jobId],
+        references: [jobPosting.id],
     }),
 }));
 

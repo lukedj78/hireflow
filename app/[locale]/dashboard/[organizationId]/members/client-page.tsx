@@ -1,17 +1,9 @@
 "use client"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { CircleNotchIcon, DotsThreeIcon, TrashIcon } from "@phosphor-icons/react"
+import { CircleNotchIcon, DotsThreeIcon, TrashIcon, Eye, Shield, User } from "@phosphor-icons/react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +34,9 @@ import {
 import { removeMemberAction, updateMemberRoleAction, inviteMemberAction } from "@/lib/server/organization-actions"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { DataTable } from "@/components/ui/data-table"
+import { ColumnDef } from "@tanstack/react-table"
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 
 export interface Member {
   id: string
@@ -114,6 +109,89 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
     }
   }
 
+  const columns: ColumnDef<Member>[] = [
+    {
+      accessorKey: "user",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="User" />
+      ),
+      cell: ({ row }) => {
+        const member = row.original
+        return (
+          <div className="flex items-center gap-3">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={member.user.image || ""} />
+              <AvatarFallback>{member.user.name?.charAt(0)}</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <Link href={`/dashboard/${activeOrgId}/members/${member.id}`} className="hover:underline">
+                <p className="font-medium">{member.user.name}</p>
+                <p className="text-xs text-muted-foreground">{member.user.email}</p>
+              </Link>
+            </div>
+          </div>
+        )
+      },
+    },
+    {
+      accessorKey: "role",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Role" />
+      ),
+      cell: ({ row }) => {
+        return (
+          <Badge variant="outline" className="capitalize">
+            {row.getValue("role")}
+          </Badge>
+        )
+      },
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Joined" />
+      ),
+      cell: ({ row }) => {
+        return new Date(row.getValue("createdAt")).toLocaleDateString()
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const member = row.original
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger render={
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <DotsThreeIcon className="h-4 w-4" />
+              </Button>
+            }/>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => router.push(`/dashboard/${activeOrgId}/members/${member.id}`)}>
+                <Eye className="mr-2 h-4 w-4" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "admin")}>
+                <Shield className="mr-2 h-4 w-4" />
+                Make Admin
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "member")}>
+                <User className="mr-2 h-4 w-4" />
+                Make Member
+              </DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveMember(member.id)}>
+                <TrashIcon className="mr-2 h-4 w-4" />
+                Remove
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -124,9 +202,11 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
           </p>
         </div>
         <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-          <DialogTrigger className={buttonVariants()}>
-            Invite Member
-          </DialogTrigger>
+          <DialogTrigger render={
+             <Button className={buttonVariants()}>
+               Invite Member
+             </Button>
+          }/>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Invite Member</DialogTitle>
@@ -168,70 +248,7 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
           </DialogContent>
         </Dialog>
       </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Joined</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {members?.map((member) => (
-              <TableRow key={member.id}>
-                <TableCell>
-                  <div className="flex items-center gap-3">
-
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={member.user.image || ""} />
-                      <AvatarFallback>{member.user.name?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-
-                    <div className="flex flex-col">
-                      <Link href={`/dashboard/${activeOrgId}/members/${member.id}`}>
-                        <p className="font-medium">{member.user.name}</p>
-                        <p className="text-xs text-muted-foreground">{member.user.email}</p>
-                      </Link>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="capitalize">
-                    {member.role}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {new Date(member.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger className={buttonVariants({ variant: "ghost", size: "icon", className: "h-8 w-8" })}>
-                      <DotsThreeIcon className="h-4 w-4" />
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => router.push(`/dashboard/${activeOrgId}/members/${member.id}`)}>
-                        View Details
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "admin")}>
-                        Make Admin
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "member")}>
-                        Make Member
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600" onClick={() => handleRemoveMember(member.id)}>
-                        <TrashIcon className="h-4 w-4" />
-                        Remove
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable columns={columns} data={members} />
     </div>
   )
 }

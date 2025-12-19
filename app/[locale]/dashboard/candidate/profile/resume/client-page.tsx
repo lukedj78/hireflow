@@ -12,6 +12,16 @@ import { candidate, candidateFile } from "@/lib/db/schema";
 import { InferSelectModel } from "drizzle-orm";
 import { Badge } from "@/components/ui/badge";
 import { StarIcon } from "@phosphor-icons/react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type CandidateWithFiles = InferSelectModel<typeof candidate> & {
     files?: InferSelectModel<typeof candidateFile>[];
@@ -23,6 +33,7 @@ interface ResumeClientPageProps {
 
 export default function ResumeClientPage({ candidateProfile }: ResumeClientPageProps) {
     const [isUploading, setIsUploading] = useState(false);
+    const [resumeToDelete, setResumeToDelete] = useState<string | null>(null);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -104,14 +115,16 @@ export default function ResumeClientPage({ candidateProfile }: ResumeClientPageP
         }
     };
 
-    const handleDelete = async (fileId: string) => {
-        if (!confirm("Are you sure you want to delete this resume?")) return;
+    const confirmDelete = async () => {
+        if (!resumeToDelete) return;
         try {
-            await deleteResumeAction(fileId);
+            await deleteResumeAction(resumeToDelete);
             toast.success("Resume deleted");
         } catch (error) {
             console.error(error);
             toast.error("Failed to delete resume");
+        } finally {
+            setResumeToDelete(null);
         }
     };
 
@@ -205,7 +218,7 @@ export default function ResumeClientPage({ candidateProfile }: ResumeClientPageP
                                                 size="icon" 
                                                 className="text-destructive hover:text-destructive hover:bg-destructive/10" 
                                                 title="Delete" 
-                                                onClick={() => handleDelete(file.id)}
+                                                onClick={() => setResumeToDelete(file.id)}
                                             >
                                                 <TrashIcon className="h-4 w-4" />
                                             </Button>
@@ -221,6 +234,23 @@ export default function ResumeClientPage({ candidateProfile }: ResumeClientPageP
                     )}
                 </CardContent>
             </Card>
+
+            <AlertDialog open={!!resumeToDelete} onOpenChange={(open) => !open && setResumeToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Resume</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to delete this resume? This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmDelete}>
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

@@ -33,6 +33,7 @@
     "@react-email/render": "^2.0.0",
     "@react-email/tailwind": "^2.0.1",
     "@supabase/supabase-js": "^2.88.0",
+    "@tanstack/react-table": "^8.21.3",
     "@types/uuid": "^11.0.0",
     "ai": "^5.0.115",
     "better-auth": "^1.4.7",

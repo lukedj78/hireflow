@@ -1,7 +1,6 @@
 "use client";
 
 import { Application, Candidate, JobPosting, candidateFile } from "@/lib/db/schema";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,12 +10,22 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Button, buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
-import { TrashIcon, FileTextIcon, EyeIcon } from "@phosphor-icons/react";
+import { TrashIcon, FileTextIcon, EyeIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { InferSelectModel } from "drizzle-orm";
 import { useState, useTransition } from "react";
 import { Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
+import { DataTable } from "@/components/ui/data-table";
+import { ColumnDef } from "@tanstack/react-table";
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 import {
     AlertDialog,
@@ -36,11 +45,44 @@ type ApplicationWithCandidate = Application & {
     };
 };
 
-function ResumeButton({ candidate }: { candidate: ApplicationWithCandidate['candidate'] }) {
-    const [isLoading, setIsLoading] = useState(false);
+type ApplicationStatus = "applied" | "screening" | "interview" | "offer" | "hired" | "rejected";
 
-    const handleView = async () => {
-        setIsLoading(true);
+interface ApplicationsClientPageProps {
+    job: JobPosting;
+    applications: ApplicationWithCandidate[];
+}
+
+export default function ApplicationsClientPage({ job, applications }: ApplicationsClientPageProps) {
+    const router = useRouter();
+    const [isPending, startTransition] = useTransition();
+    const [applicationToDelete, setApplicationToDelete] = useState<string | null>(null);
+
+    const handleStatusChange = (applicationId: string, newStatus: string) => {
+        startTransition(async () => {
+            const result = await updateApplicationStatusAction(applicationId, newStatus as ApplicationStatus);
+            if (!result.success) {
+                toast.error(result.error);
+            } else {
+                toast.success("Status updated");
+                router.refresh();
+            }
+        });
+    };
+
+    async function handleDelete() {
+        if (!applicationToDelete) return;
+        try {
+            await deleteApplicationAction(applicationToDelete);
+            toast.success("Application deleted");
+            router.refresh();
+        } catch {
+            toast.error("Failed to delete application");
+        } finally {
+            setApplicationToDelete(null);
+        }
+    }
+
+    const handleViewResume = async (candidate: ApplicationWithCandidate['candidate']) => {
         try {
             const fileKey = candidate.files?.[0]?.fileKey;
 
@@ -59,58 +101,8 @@ function ResumeButton({ candidate }: { candidate: ApplicationWithCandidate['cand
         } catch (error) {
             console.error(error);
             toast.error("Failed to open resume");
-        } finally {
-            setIsLoading(false);
         }
     };
-
-    if (!candidate.resumeUrl && (!candidate.files || candidate.files.length === 0)) return null;
-
-    return (
-        <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleView}
-            disabled={isLoading}
-            title="View Resume"
-        >
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileTextIcon className="h-4 w-4" />}
-        </Button>
-    );
-}
-
-type ApplicationStatus = "applied" | "screening" | "interview" | "offer" | "hired" | "rejected";
-
-interface ApplicationsClientPageProps {
-    job: JobPosting;
-    applications: ApplicationWithCandidate[];
-}
-
-export default function ApplicationsClientPage({ job, applications }: ApplicationsClientPageProps) {
-    const router = useRouter();
-    const [isPending, startTransition] = useTransition();
-
-    const handleStatusChange = (applicationId: string, newStatus: string) => {
-        startTransition(async () => {
-            const result = await updateApplicationStatusAction(applicationId, newStatus as ApplicationStatus);
-            if (!result.success) {
-                toast.error(result.error);
-            } else {
-                toast.success("Status updated");
-                router.refresh();
-            }
-        });
-    };
-
-    async function handleDelete(applicationId: string) {
-        try {
-            await deleteApplicationAction(applicationId);
-            toast.success("Application deleted");
-            router.refresh();
-        } catch {
-            toast.error("Failed to delete application");
-        }
-    }
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -124,6 +116,104 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
         }
     };
 
+    const columns: ColumnDef<ApplicationWithCandidate>[] = [
+        {
+            accessorKey: "candidate",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Candidate" />
+            ),
+            cell: ({ row }) => {
+                const app = row.original;
+                return (
+                    <div>
+                        <Link
+                            href={`/dashboard/${job.organizationId}/jobs/${job.id}/applications/${app.id}`}
+                            className="font-medium hover:underline"
+                        >
+                            {app.candidate.name}
+                        </Link>
+                        <div className="text-sm text-muted-foreground">{app.candidate.email}</div>
+                    </div>
+                );
+            },
+        },
+        {
+            accessorKey: "createdAt",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Applied" />
+            ),
+            cell: ({ row }) => {
+                return formatDistanceToNow(new Date(row.original.createdAt), { addSuffix: true });
+            },
+        },
+        {
+            accessorKey: "status",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Status" />
+            ),
+            cell: ({ row }) => getStatusBadge(row.original.status),
+        },
+        {
+            id: "changeStatus",
+            header: ({ column }) => (
+                <DataTableColumnHeader column={column} title="Change Status" />
+            ),
+            cell: ({ row }) => {
+                 const app = row.original;
+                 return (
+                     <Select
+                        defaultValue={app.status}
+                        onValueChange={(val) => handleStatusChange(app.id, val as ApplicationStatus)}
+                        disabled={isPending}
+                    >
+                        <SelectTrigger className="w-[140px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="applied">Applied</SelectItem>
+                            <SelectItem value="screening">Screening</SelectItem>
+                            <SelectItem value="interview">Interview</SelectItem>
+                            <SelectItem value="offer">Offer</SelectItem>
+                            <SelectItem value="hired">Hired</SelectItem>
+                            <SelectItem value="rejected">Rejected</SelectItem>
+                        </SelectContent>
+                    </Select>
+                 )
+            }
+        },
+        {
+            id: "actions",
+            cell: ({ row }) => {
+                 const app = row.original;
+                 return (
+                     <DropdownMenu>
+                        <DropdownMenuTrigger render={
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Open menu</span>
+                                <DotsThreeIcon className="h-4 w-4" />
+                            </Button>
+                        }/>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleViewResume(app.candidate)}>
+                                <FileTextIcon className="mr-2 h-4 w-4" />
+                                View Resume
+                            </DropdownMenuItem>
+                             <DropdownMenuItem onClick={() => router.push(`/dashboard/${job.organizationId}/jobs/${job.id}/applications/${app.id}`)}>
+                                <EyeIcon className="mr-2 h-4 w-4" />
+                                View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                             <DropdownMenuItem className="text-destructive" onClick={() => setApplicationToDelete(app.id)}>
+                                <TrashIcon className="mr-2 h-4 w-4" />
+                                Delete
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                     </DropdownMenu>
+                 )
+            }
+        }
+    ]
+
     return (
         <div className="space-y-6">
             <PageHeader
@@ -132,92 +222,25 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
                 backHref={`/dashboard/${job.organizationId}/jobs/${job.id}`}
             />
             
-            <div className="border rounded-lg">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Candidate</TableHead>
-                            <TableHead>Applied</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead>Change Status</TableHead>
-                            <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {applications.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                    No applications yet.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            applications.map((app) => (
-                                <TableRow key={app.id}>
-                                    <TableCell>
-                                        <div className="font-medium">{app.candidate.name}</div>
-                                        <div className="text-sm text-muted-foreground">{app.candidate.email}</div>
-                                    </TableCell>
-                                    <TableCell>
-                                        {formatDistanceToNow(new Date(app.createdAt), { addSuffix: true })}
-                                    </TableCell>
-                                    <TableCell>
-                                        {getStatusBadge(app.status)}
-                                    </TableCell>
-                                    <TableCell>
-                                        <Select
-                                            defaultValue={app.status}
-                                            onValueChange={(val) => val && handleStatusChange(app.id, val)}
-                                        >
-                                            <SelectTrigger className="w-[140px]">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="applied">Applied</SelectItem>
-                                                <SelectItem value="screening">Screening</SelectItem>
-                                                <SelectItem value="interview">Interview</SelectItem>
-                                                <SelectItem value="offer">Offer</SelectItem>
-                                                <SelectItem value="hired">Hired</SelectItem>
-                                                <SelectItem value="rejected">Rejected</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <ResumeButton candidate={app.candidate} />
-                                            <Link
-                                                href={`/dashboard/${job.organizationId}/jobs/${job.id}/applications/${app.id}`}
-                                                className={buttonVariants({ variant: "ghost", size: "icon" })}
-                                                title="View Details"
-                                            >
-                                                <EyeIcon className="w-4 h-4" />
-                                            </Link>
-                                            <AlertDialog>
-                                                <AlertDialogTrigger className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "text-destructive hover:text-destructive hover:bg-destructive/10")}>
-                                                    <TrashIcon className="h-4 w-4" />
-                                                </AlertDialogTrigger>
-                                                <AlertDialogContent>
-                                                    <AlertDialogHeader>
-                                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                        <AlertDialogDescription>
-                                                            This action cannot be undone. This will permanently delete the application for {app.candidate.name}.
-                                                        </AlertDialogDescription>
-                                                    </AlertDialogHeader>
-                                                    <AlertDialogFooter>
-                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                        <AlertDialogAction onClick={() => handleDelete(app.id)} className="bg-destructive hover:bg-destructive/90">
-                                                            Delete
-                                                        </AlertDialogAction>
-                                                    </AlertDialogFooter>
-                                                </AlertDialogContent>
-                                            </AlertDialog>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
+            <DataTable columns={columns} data={applications} />
+
+            <AlertDialog open={!!applicationToDelete} onOpenChange={(open) => !open && setApplicationToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Application?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will permanently delete the application.
+                            This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }

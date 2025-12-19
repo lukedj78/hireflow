@@ -66,6 +66,16 @@ export const listUsersAction = cache(async (query?: {
 });
 
 /**
+ * Recupera i dettagli di un singolo utente.
+ * Richiede permessi di amministratore.
+ */
+export const getUserAction = cache(async (userId: string) => {
+    await checkAdminPermission({ user: ["read"] });
+    const [foundUser] = await db.select().from(user).where(eq(user.id, userId));
+    return foundUser;
+});
+
+/**
  * Banna un utente dal sistema, impedendogli l'accesso.
  * Richiede permessi di amministratore.
  */

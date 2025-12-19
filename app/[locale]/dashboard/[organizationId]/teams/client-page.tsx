@@ -1,17 +1,8 @@
 "use client"
 
-import { authClient } from "@/lib/auth-client"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import {
     Dialog,
     DialogContent,
@@ -23,11 +14,20 @@ import {
 } from "@/components/ui/dialog"
 import { useState } from "react"
 import { toast } from "sonner"
-import { CircleNotchIcon, TrashIcon } from "@phosphor-icons/react"
+import { CircleNotchIcon, TrashIcon, DotsThreeIcon } from "@phosphor-icons/react"
 
 import { createTeamAction, deleteTeamAction } from "@/lib/server/organization-actions"
 
 import { useRouter } from "next/navigation"
+import { DataTable } from "@/components/ui/data-table"
+import { ColumnDef } from "@tanstack/react-table"
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface Team {
     id: string
@@ -75,6 +75,47 @@ export default function TeamsClientPage({ initialTeams: teams, activeOrgId }: { 
       }
   }
 
+  const columns: ColumnDef<Team>[] = [
+    {
+      accessorKey: "name",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Name" />
+      ),
+    },
+    {
+      accessorKey: "createdAt",
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Created At" />
+      ),
+      cell: ({ row }) => {
+        return new Date(row.getValue("createdAt")).toLocaleDateString()
+      },
+    },
+    {
+      id: "actions",
+      cell: ({ row }) => {
+        const team = row.original
+
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger render={
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <DotsThreeIcon className="h-4 w-4" />
+              </Button>
+            }/>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleDeleteTeam(team.id)} className="text-destructive">
+                <TrashIcon className="mr-2 h-4 w-4" />
+                Delete Team
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )
+      },
+    },
+  ]
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -85,9 +126,11 @@ export default function TeamsClientPage({ initialTeams: teams, activeOrgId }: { 
           </p>
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-            <DialogTrigger className={buttonVariants()}>
-                Create Team
-            </DialogTrigger>
+            <DialogTrigger render={
+                <Button className={buttonVariants()}>
+                    Create Team
+                </Button>
+            }/>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Create Team</DialogTitle>
@@ -115,37 +158,7 @@ export default function TeamsClientPage({ initialTeams: teams, activeOrgId }: { 
             </DialogContent>
         </Dialog>
       </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Created At</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {teams?.map((team) => (
-              <TableRow key={team.id}>
-                <TableCell className="font-medium">{team.name}</TableCell>
-                <TableCell>
-                    {new Date(team.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell>
-                   <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)}>
-                       <TrashIcon className="h-4 w-4 text-destructive" />
-                   </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {teams.length === 0 && (
-                <TableRow>
-                    <TableCell colSpan={3} className="text-center">No teams found.</TableCell>
-                </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      <DataTable columns={columns} data={teams} />
     </div>
   )
 }

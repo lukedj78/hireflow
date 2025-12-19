@@ -1,7 +1,6 @@
 "use client"
 
 import { Button, buttonVariants } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
     Dialog,
     DialogContent,
@@ -22,6 +21,9 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import Link from "next/link"
+import { DataTable } from "@/components/ui/data-table"
+import { ColumnDef } from "@tanstack/react-table"
+import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 
 const createOrgSchema = z.object({
     name: z.string().min(2, "Name must be at least 2 characters"),
@@ -64,6 +66,38 @@ export default function AdminOrganizationsClientPage({ initialOrgs: orgs }: { in
             console.error(error)
         }
     }
+
+    const columns: ColumnDef<Organization>[] = [
+        {
+          accessorKey: "name",
+          header: ({ column }) => (
+            <DataTableColumnHeader column={column} title="Name" />
+          ),
+          cell: ({ row }) => {
+            const org = row.original
+            return (
+                 <Link href={`/dashboard/${org.id}`} className={buttonVariants({ variant: "link" })}>
+                    {org.name}
+                 </Link>
+            )
+          }
+        },
+        {
+          accessorKey: "slug",
+          header: ({ column }) => (
+            <DataTableColumnHeader column={column} title="Slug" />
+          ),
+        },
+        {
+          accessorKey: "createdAt",
+          header: ({ column }) => (
+            <DataTableColumnHeader column={column} title="Created At" />
+          ),
+          cell: ({ row }) => {
+              return new Date(row.getValue("createdAt")).toLocaleDateString()
+          }
+        },
+    ]
 
     return (
         <div className="space-y-6">
@@ -121,32 +155,7 @@ export default function AdminOrganizationsClientPage({ initialOrgs: orgs }: { in
                 </Dialog>
             </div>
 
-            <div className="rounded-md border">
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Slug</TableHead>
-                            <TableHead>Created At</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {orgs.map((org) => (
-                            <TableRow key={org.id}>
-                                <TableCell className="font-medium">
-                                    <Link href={`/dashboard/${org.id}`} className={buttonVariants({ variant: "link" })}>
-                                        {org.name}
-                                    </Link>
-                                </TableCell>
-                                <TableCell>{org.slug}</TableCell>
-                                <TableCell>
-                                    {new Date(org.createdAt).toLocaleDateString()}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </div>
+            <DataTable columns={columns} data={orgs} />
         </div>
     )
 }

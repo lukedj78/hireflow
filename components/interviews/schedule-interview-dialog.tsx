@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { CalendarIcon, CircleNotchIcon, VideoIcon } from "@phosphor-icons/react";
+import { Calendar as CalendarIcon, Loader2 as CircleNotchIcon, Video as VideoIcon } from "lucide-react";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 
@@ -34,10 +34,10 @@ import { Label } from "@/components/ui/label";
 const formSchema = z.object({
     date: z.date(),
     startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
-    duration: z.coerce.number().min(15).max(240),
+    duration: z.number().min(15).max(240),
     location: z.string().optional(),
-    meetingLink: z.string().url("Invalid URL").optional().or(z.literal("")),
-    generateMeetingLink: z.boolean().default(false),
+    meetingLink: z.string().url({ message: "Invalid URL" }).optional().or(z.literal("")),
+    generateMeetingLink: z.boolean(),
     notes: z.string().optional(),
 });
 
@@ -178,7 +178,12 @@ export function ScheduleInterviewDialog({
                                     render={({ field, fieldState }) => (
                                         <Field className="flex-1">
                                             <FieldLabel>Duration (min)</FieldLabel>
-                                            <Input type="number" {...field} />
+                                            <Input 
+                                                type="number" 
+                                                min={15}
+                                                {...field}
+                                                onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                            />
                                             <FieldError errors={[fieldState.error]} />
                                         </Field>
                                     )}

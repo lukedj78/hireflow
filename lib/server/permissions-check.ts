@@ -37,7 +37,7 @@ export async function checkOrgPermission(organizationId: string, permission: Rec
     }
     
     // We use the inferred type from one of the roles to ensure type safety
-    const authorization = role.authorize(permission as Parameters<typeof orgOwnerRole.authorize>[0]);
+    const authorization = (role as typeof orgOwnerRole).authorize(permission as Parameters<typeof orgOwnerRole.authorize>[0]);
     if (!authorization.success) {
          throw new APIError("FORBIDDEN", { message: "Permission denied" });
     }

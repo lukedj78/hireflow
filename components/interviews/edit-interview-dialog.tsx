@@ -33,9 +33,9 @@ import { Form } from "@/components/ui/form";
 const formSchema = z.object({
     date: z.date(),
     startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
-    duration: z.coerce.number().min(15).max(240),
+    duration: z.number().min(15).max(240),
     location: z.string().optional(),
-    meetingLink: z.string().url("Invalid URL").optional().or(z.literal("")),
+    meetingLink: z.string().url({ message: "Invalid URL" }).optional().or(z.literal("")),
     notes: z.string().optional(),
     status: z.enum(["scheduled", "completed", "cancelled", "rescheduled"]),
 });
@@ -108,7 +108,7 @@ export function EditInterviewDialog({
             } else {
                 toast.error(result.error || "Failed to update interview");
             }
-        } catch (error) {
+        } catch {
             toast.error("An unexpected error occurred");
         }
     }
@@ -181,9 +181,10 @@ export function EditInterviewDialog({
                                             <FieldLabel>Duration (minutes)</FieldLabel>
                                             <Input 
                                                 type="number" 
-                                                min="15" 
-                                                step="15" 
+                                                min={15}
+                                                step={15}
                                                 {...field}
+                                                onChange={(e) => field.onChange(e.target.valueAsNumber)}
                                             />
                                             <FieldError errors={[fieldState.error]} />
                                         </Field>

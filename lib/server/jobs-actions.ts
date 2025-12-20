@@ -71,12 +71,14 @@ export async function getJobsAction(organizationId: string, filters?: {
         const whereConditions = [eq(jobPosting.organizationId, organizationId)];
 
         if (filters?.search) {
-            whereConditions.push(
-                or(
-                    like(jobPosting.title, `%${filters.search}%`),
-                    like(jobPosting.description, `%${filters.search}%`)
-                )
+            const searchLower = `%${filters.search.toLowerCase()}%`;
+            const searchCondition = or(
+                like(sql`lower(${jobPosting.title})`, searchLower),
+                like(sql`lower(${jobPosting.description})`, searchLower)
             );
+            if (searchCondition) {
+                whereConditions.push(searchCondition);
+            }
         }
 
         if (filters?.status && filters.status !== 'all') {

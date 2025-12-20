@@ -3,7 +3,7 @@
 import { JobPosting } from "@/lib/db/schema"
 import { useTranslations } from "next-intl"
 import { Button, buttonVariants } from "@/components/ui/button"
-import { PlusIcon, DotsThreeIcon, TrashIcon, PencilIcon,  } from "@phosphor-icons/react";
+import { PlusIcon, DotsThreeIcon, TrashIcon, PencilIcon, Sparkle } from "@phosphor-icons/react";
 import Link from "next/link"
 import {
   DropdownMenu,
@@ -109,10 +109,16 @@ export default function JobsClientPage({ initialJobs, organizationId }: JobsClie
         title={t("title")}
         description={t("description")}
         actions={
-          <Link href={`/dashboard/${organizationId}/jobs/new`} className={buttonVariants()}>
-            <PlusIcon className="mr-2 h-4 w-4" />
-            {t("create")}
-          </Link>
+          <div className="flex gap-2">
+            <Link href={`/dashboard/${organizationId}/jobs/ai-new`} className={buttonVariants({ variant: "secondary" })}>
+              <Sparkle className="mr-2 h-4 w-4" />
+              AI Create
+            </Link>
+            <Link href={`/dashboard/${organizationId}/jobs/new`} className={buttonVariants()}>
+              <PlusIcon className="mr-2 h-4 w-4" />
+              {t("create")}
+            </Link>
+          </div>
         }
       />
 

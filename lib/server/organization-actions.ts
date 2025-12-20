@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { organizationMember as memberSchema, organization, jobPosting } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
-import { orgOwnerRole, orgAdminRole, orgMemberRole } from "@/lib/permissions";
+import { checkOrgPermission } from "@/lib/server/permissions-check";
 import { APIError } from "better-auth/api";
 import { cache } from "react";
 import { NotificationService } from "@/lib/services/notification-service";
@@ -41,35 +41,7 @@ export const getOrganizationAction = cache(async (organizationId: string) => {
     });
 });
 
-async function checkOrgPermission(organizationId: string, permission: Record<string, string[]>) {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) throw new APIError("UNAUTHORIZED", { message: "Not authenticated" });
 
-    if (session.user.role === "admin") return;
-
-    const currentMember = await db.query.organizationMember.findFirst({
-        where: and(
-            eq(memberSchema.organizationId, organizationId),
-            eq(memberSchema.userId, session.user.id)
-        )
-    });
-
-    if (!currentMember) {
-         throw new APIError("FORBIDDEN", { message: "Unauthorized" });
-    }
-
-    const roleMap = {
-        owner: orgOwnerRole,
-        admin: orgAdminRole,
-        member: orgMemberRole
-    };
-    const role = roleMap[currentMember.role as keyof typeof roleMap];
-    
-    const authorization = (role as typeof orgOwnerRole).authorize(permission as Parameters<typeof orgOwnerRole.authorize>[0]);
-    if (!authorization.success) {
-         throw new APIError("FORBIDDEN", { message: "Permission denied" });
-    }
-}
 
 /**
  * Aggiorna i dati di un'organizzazione.

@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import ClientPage from "./client-page";
+import { checkOrgPermission } from "@/lib/server/permissions-check";
 
 interface PageProps {
   params: Promise<{
@@ -18,6 +19,12 @@ export default async function AiJobCreationPage({ params }: PageProps) {
 
   if (!session) {
     redirect("/auth/sign-in");
+  }
+
+  try {
+      await checkOrgPermission(organizationId, { jobPosting: ["create"] });
+  } catch {
+      redirect(`/dashboard/${organizationId}/jobs`);
   }
 
 

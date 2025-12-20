@@ -1,5 +1,6 @@
 "use server";
 
+import { createElement } from "react";
 import { render } from "@react-email/render";
 import AccountStatusEmail from "@/emails/account-status-email";
 import ApplicationReceivedEmail from "@/emails/application-received-email";
@@ -142,8 +143,8 @@ export async function renderEmailPreviewAction(templateKey: string) {
     }
 
     try {
-        // @ts-expect-error - Dynamic component rendering
-        const html = await render(template.component(template.props));
+        const Component = template.component as React.ComponentType<typeof template.props>;
+        const html = await render(createElement(Component, template.props));
         return { success: true, html };
     } catch (error) {
         console.error("Error rendering email:", error);

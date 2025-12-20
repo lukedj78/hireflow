@@ -30,6 +30,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
+import { NuqsAdapter } from 'nuqs/adapters/next/app'
+
 export default async function RootLayout({
   children,
   params
@@ -55,19 +57,21 @@ export default async function RootLayout({
     <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
       <body className="antialiased">
         <NextIntlClientProvider messages={messages}>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <GDPRProvider>
-              <GTM />
-              {children}
-              <Toaster />
-              <TailwindIndicator />
-            </GDPRProvider>
-          </ThemeProvider>
+          <NuqsAdapter>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <GDPRProvider>
+                <GTM />
+                {children}
+                <Toaster />
+                <TailwindIndicator />
+              </GDPRProvider>
+            </ThemeProvider>
+          </NuqsAdapter>
         </NextIntlClientProvider>
       </body>
     </html>

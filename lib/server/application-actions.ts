@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { application, candidate, jobPosting, organizationMember, candidateFile } from "@/lib/db/schema";
+import { application, candidate, jobPosting, candidateFile } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { triggerWorkflow } from "@/lib/events";
@@ -10,6 +10,7 @@ import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { createPresignedDownloadUrl } from "../supabase-storage";
 import { NotificationService } from "@/lib/services/notification-service";
+import { checkOrgPermission } from "@/lib/server/permissions-check";
 
 
 export type SubmitApplicationData = {
@@ -191,11 +192,6 @@ export async function submitApplicationAction(data: SubmitApplicationData) {
  */
 export async function updateApplicationStatusAction(applicationId: string, status: "applied" | "screening" | "interview" | "offer" | "hired" | "rejected") {
     try {
-        const session = await auth.api.getSession({ headers: await headers() });
-        if (!session) {
-            throw new Error("Unauthorized");
-        }
-
         const app = await db.query.application.findFirst({
             where: eq(application.id, applicationId),
             with: {
@@ -227,17 +223,7 @@ export async function updateApplicationStatusAction(applicationId: string, statu
             throw new Error("Application not found");
         }
 
-        // Verify membership
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, app.jobPosting.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            throw new Error("You are not authorized to update this application");
-        }
+        await checkOrgPermission(app.jobPosting.organizationId, { application: ["status"] });
 
         const [updatedApp] = await db.update(application)
             .set({ status })
@@ -275,11 +261,6 @@ export async function updateApplicationStatusAction(applicationId: string, statu
  */
 export async function deleteApplicationAction(applicationId: string) {
     try {
-        const session = await auth.api.getSession({ headers: await headers() });
-        if (!session) {
-            throw new Error("Unauthorized");
-        }
-
         const app = await db.query.application.findFirst({
             where: eq(application.id, applicationId),
             with: {
@@ -296,17 +277,7 @@ export async function deleteApplicationAction(applicationId: string) {
             throw new Error("Application not found");
         }
 
-        // Verify membership
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, app.jobPosting.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            throw new Error("You are not authorized to delete this application");
-        }
+        await checkOrgPermission(app.jobPosting.organizationId, { application: ["delete"] });
 
         await db.delete(application).where(eq(application.id, applicationId));
 
@@ -324,11 +295,6 @@ export async function deleteApplicationAction(applicationId: string) {
  * Include i dettagli del candidato e il suo CV più recente.
  */
 export async function getJobApplicationsAction(jobId: string) {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) {
-        throw new Error("Unauthorized");
-    }
-
     // Verify membership for the job's organization
     const job = await db.query.jobPosting.findFirst({
         where: eq(jobPosting.id, jobId),
@@ -338,16 +304,7 @@ export async function getJobApplicationsAction(jobId: string) {
         throw new Error("Job not found");
     }
 
-    const membership = await db.query.organizationMember.findFirst({
-        where: and(
-            eq(organizationMember.organizationId, job.organizationId),
-            eq(organizationMember.userId, session.user.id)
-        )
-    });
-
-    if (!membership) {
-        throw new Error("You are not authorized to view applications for this job");
-    }
+    await checkOrgPermission(job.organizationId, { application: ["read"] });
 
     const applications = await db.query.application.findMany({
         where: eq(application.jobPostingId, jobId),
@@ -388,11 +345,6 @@ export async function getJobApplicationsAction(jobId: string) {
  * Recupera i dettagli di una singola candidatura, inclusi i dati del candidato e dell'offerta di lavoro.
  */
 export async function getApplicationAction(applicationId: string) {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (!session) {
-        throw new Error("Unauthorized");
-    }
-
     const app = await db.query.application.findFirst({
         where: eq(application.id, applicationId),
         with: {
@@ -444,18 +396,7 @@ export async function getApplicationAction(applicationId: string) {
         return null;
     }
 
-    // Verify membership
-    const membership = await db.query.organizationMember.findFirst({
-        where: and(
-            eq(organizationMember.organizationId, app.jobPosting.organizationId),
-            eq(organizationMember.userId, session.user.id)
-        )
-    });
-
-    if (!membership) {
-        throw new Error("You are not authorized to view this application");
-    }
+    await checkOrgPermission(app.jobPosting.organizationId, { application: ["read"] });
 
     return app;
 }
-

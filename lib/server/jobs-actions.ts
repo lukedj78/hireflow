@@ -3,11 +3,12 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { jobPosting, organizationMember } from "@/lib/db/schema";
+import { jobPosting } from "@/lib/db/schema";
 import { eq, desc, and, like, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 import { generateEmbedding } from "./ai-actions";
+import { checkOrgPermission } from "@/lib/server/permissions-check";
 
 export type CreateJobData = {
     title: string;
@@ -26,22 +27,7 @@ export type CreateJobData = {
  */
 export async function createJobAction(data: CreateJobData) {
     try {
-        const session = await auth.api.getSession({ headers: await headers() });
-        if (!session) {
-            throw new Error("Unauthorized");
-        }
-
-        // Verify user is a member of the organization
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, data.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            throw new Error("You are not a member of this organization");
-        }
+        await checkOrgPermission(data.organizationId, { jobPosting: ["create"] });
 
         // Generate a unique slug
         const slug = `${data.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${nanoid(6)}`;
@@ -74,26 +60,35 @@ export async function createJobAction(data: CreateJobData) {
  * Richiede che l'utente sia autenticato e membro dell'organizzazione.
  * Ordina i risultati per data di creazione decrescente.
  */
-export async function getJobsAction(organizationId: string) {
+export async function getJobsAction(organizationId: string, filters?: {
+    search?: string;
+    status?: string;
+    type?: string;
+}) {
     try {
-        const session = await auth.api.getSession({ headers: await headers() });
-        if (!session) {
-            throw new Error("Unauthorized");
+        await checkOrgPermission(organizationId, { jobPosting: ["read"] });
+
+        const whereConditions = [eq(jobPosting.organizationId, organizationId)];
+
+        if (filters?.search) {
+            whereConditions.push(
+                or(
+                    like(jobPosting.title, `%${filters.search}%`),
+                    like(jobPosting.description, `%${filters.search}%`)
+                )
+            );
         }
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
+        if (filters?.status && filters.status !== 'all') {
+            whereConditions.push(eq(jobPosting.status, filters.status as "draft" | "published" | "closed"));
+        }
 
-        if (!membership) {
-            throw new Error("You are not a member of this organization");
+        if (filters?.type && filters.type !== 'all') {
+            whereConditions.push(eq(jobPosting.type, filters.type as "remote" | "onsite" | "hybrid"));
         }
 
         const jobs = await db.query.jobPosting.findMany({
-            where: eq(jobPosting.organizationId, organizationId),
+            where: and(...whereConditions),
             orderBy: [desc(jobPosting.createdAt)],
         });
 
@@ -122,16 +117,7 @@ export async function getJobAction(jobId: string) {
             return { success: true, data: null };
         }
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, job.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            throw new Error("You are not authorized to view this job");
-        }
+        await checkOrgPermission(job.organizationId, { jobPosting: ["read"] });
 
         return { success: true, data: job };
     } catch (error) {
@@ -232,16 +218,7 @@ export async function updateJobAction(jobId: string, data: Partial<CreateJobData
             throw new Error("Job not found");
         }
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, job.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            throw new Error("You are not authorized to update this job");
-        }
+        await checkOrgPermission(job.organizationId, { jobPosting: ["update"] });
 
         // Generate embedding if title or description changed
         let embedding: number[] | undefined;
@@ -286,16 +263,7 @@ export async function deleteJobAction(jobId: string) {
             throw new Error("Job not found");
         }
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, job.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            throw new Error("You are not authorized to delete this job");
-        }
+        await checkOrgPermission(job.organizationId, { jobPosting: ["delete"] });
 
         await db.delete(jobPosting).where(eq(jobPosting.id, jobId));
         revalidatePath(`/dashboard/${job.organizationId}/jobs`);

@@ -3,14 +3,15 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
-import { interview, application, organizationMember, jobPosting, candidate, communicationLog } from "@/lib/db/schema";
-import { eq, and, desc, ne } from "drizzle-orm";
+import { interview, application, jobPosting, candidate } from "@/lib/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 
 import { VideoProviderFactory } from "@/lib/video/factory";
 import { NotificationService } from "@/lib/services/notification-service";
 import { triggerWorkflow } from "@/lib/events";
+import { checkOrgPermission } from "@/lib/server/permissions-check";
 
 export type CreateInterviewData = {
     applicationId: string;
@@ -48,16 +49,7 @@ export async function createInterviewAction(data: CreateInterviewData) {
             throw new Error("Job not found");
         }
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, job.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            throw new Error("You are not authorized to schedule interviews for this job");
-        }
+        await checkOrgPermission(job.organizationId, { interview: ["create"] });
 
         // Gestione creazione meeting video
         let finalMeetingLink = data.meetingLink;
@@ -173,17 +165,7 @@ export async function getApplicationInterviewsAction(applicationId: string) {
             throw new Error("Application not found");
         }
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, app.jobPosting.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            console.log("[getApplicationInterviewsAction] User not member of org");
-            throw new Error("Unauthorized");
-        }
+        await checkOrgPermission(app.jobPosting.organizationId, { interview: ["read"] });
 
         const interviews = await db.query.interview.findMany({
             where: eq(interview.applicationId, applicationId),
@@ -233,16 +215,7 @@ export async function updateInterviewAction(interviewId: string, data: Partial<C
             throw new Error("Interview not found");
         }
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, existingInterview.job.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            throw new Error("Unauthorized");
-        }
+        await checkOrgPermission(existingInterview.job.organizationId, { interview: ["update"] });
 
         const [updatedInterview] = await db.update(interview)
             .set({
@@ -336,16 +309,7 @@ export async function deleteInterviewAction(interviewId: string) {
             throw new Error("Interview not found");
         }
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, existingInterview.job.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) {
-            throw new Error("Unauthorized");
-        }
+        await checkOrgPermission(existingInterview.job.organizationId, { interview: ["delete"] });
 
         await db.delete(interview).where(eq(interview.id, interviewId));
 

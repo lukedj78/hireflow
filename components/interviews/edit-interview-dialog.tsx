@@ -33,7 +33,7 @@ import { Form } from "@/components/ui/form";
 const formSchema = z.object({
     date: z.date(),
     startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format (HH:MM)"),
-    duration: z.preprocess((val) => Number(val), z.number().min(15).max(240)),
+    duration: z.coerce.number().min(15).max(240),
     location: z.string().optional(),
     meetingLink: z.string().url("Invalid URL").optional().or(z.literal("")),
     notes: z.string().optional(),
@@ -53,8 +53,7 @@ export function EditInterviewDialog({
 }: EditInterviewDialogProps) {
     const router = useRouter();
     const form = useForm<z.infer<typeof formSchema>>({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        resolver: zodResolver(formSchema) as any,
+        resolver: zodResolver(formSchema),
         defaultValues: {
             date: new Date(interview.startTime),
             startTime: format(new Date(interview.startTime), "HH:mm"),

@@ -20,7 +20,7 @@ import { useRouter, useParams } from "next/navigation"
 import { useTranslations } from "next-intl"
 import { JobPosting } from "@/lib/db/schema"
 import Link from "next/link"
-import { UsersIcon, SparkleIcon, CircleNotchIcon } from "@phosphor-icons/react"
+import { Users, Sparkles, Loader2 } from "lucide-react"
 import { buttonVariants } from "@/components/ui/button"
 import { triggerJobParsingAction } from "@/lib/server/ai-actions"
 
@@ -43,14 +43,17 @@ type JobFormValues = z.infer<typeof jobSchema>
 
 interface EditJobClientPageProps {
   job: JobPosting
+  currentUserRole: string
 }
 
-export default function EditJobClientPage({ job }: EditJobClientPageProps) {
+export default function EditJobClientPage({ job, currentUserRole }: EditJobClientPageProps) {
   const t = useTranslations("Jobs")
   const router = useRouter()
   const params = useParams()
   const organizationId = params?.organizationId as string
   const [isParsing, setIsParsing] = useState(false)
+
+  const canUpdateJob = ["owner", "admin", "hr"].includes(currentUserRole);
 
   async function handleParseJob() {
       setIsParsing(true)
@@ -104,21 +107,21 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
                 href={`/dashboard/${organizationId}/jobs/${job.id}/suggestions`}
                 className={buttonVariants({ variant: "secondary" })}
             >
-                <SparkleIcon className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
                 AI Suggestions
             </Link>
             <Link 
                 href={`/dashboard/${organizationId}/jobs/${job.id}/pipeline`}
                 className={buttonVariants({ variant: "default" })}
             >
-                <UsersIcon className="h-4 w-4" />
+                <Users className="h-4 w-4" />
                 Pipeline View
             </Link>
             <Link 
                 href={`/dashboard/${organizationId}/jobs/${job.id}/applications`}
                 className={buttonVariants({ variant: "outline" })}
             >
-                <UsersIcon className="h-4 w-4" />
+                <Users className="h-4 w-4" />
                 List View
             </Link>
           </>
@@ -132,6 +135,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
               id="title" 
               placeholder="Senior Frontend Developer" 
               {...form.register("title")} 
+              disabled={!canUpdateJob}
             />
             {form.formState.errors.title && (
               <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
@@ -145,6 +149,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
                 id="location" 
                 placeholder="San Francisco, CA" 
                 {...form.register("location")} 
+                disabled={!canUpdateJob}
               />
               {form.formState.errors.location && (
                 <p className="text-sm text-destructive">{form.formState.errors.location.message}</p>
@@ -156,6 +161,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
               <Select 
                 onValueChange={(val) => form.setValue("type", val as "remote" | "onsite" | "hybrid", { shouldValidate: true })} 
                 value={form.watch("type")}
+                disabled={!canUpdateJob}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -178,6 +184,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
               id="salaryRange" 
               placeholder="$100k - $150k" 
               {...form.register("salaryRange")} 
+              disabled={!canUpdateJob}
             />
             <p className="text-sm text-muted-foreground">Provide a range or fixed amount.</p>
             {form.formState.errors.salaryRange && (
@@ -192,6 +199,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
               placeholder="Job description..."
               className="min-h-[150px]"
               {...form.register("description")}
+              disabled={!canUpdateJob}
             />
             {form.formState.errors.description && (
               <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>
@@ -203,6 +211,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
             <Select 
               onValueChange={(val) => form.setValue("status", val as "draft" | "published" | "closed", { shouldValidate: true })} 
               value={form.watch("status")}
+              disabled={!canUpdateJob}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -222,9 +231,11 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
             <Button type="button" variant="outline" onClick={() => router.back()}>
                 Cancel
             </Button>
+            {canUpdateJob && (
             <Button type="submit" disabled={form.formState.isSubmitting}>
                 {form.formState.isSubmitting ? t("form.submitting") : t("form.submit")}
             </Button>
+            )}
           </div>
       </form>
 
@@ -232,13 +243,15 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
           <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
-                      <SparkleIcon className="h-5 w-5 text-purple-500" />
+                      <Sparkles className="h-5 w-5 text-purple-500" />
                       AI Job Analysis
                   </CardTitle>
+                  {canUpdateJob && (
                   <Button variant="outline" size="sm" onClick={handleParseJob} disabled={isParsing}>
-                      {isParsing ? <CircleNotchIcon className="h-4 w-4 animate-spin mr-2" /> : <SparkleIcon className="h-4 w-4 mr-2" />}
+                      {isParsing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                       {job.parsedRequirements ? "Re-analyze" : "Analyze Job"}
                   </Button>
+                  )}
               </CardHeader>
               <CardContent>
                   {job.parsedRequirements ? (
@@ -277,7 +290,7 @@ export default function EditJobClientPage({ job }: EditJobClientPageProps) {
                       </div>
                   ) : (
                       <div className="text-center py-6 text-muted-foreground">
-                           <SparkleIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                           <Sparkles className="h-8 w-8 mx-auto mb-2 opacity-50" />
                            <p>No AI analysis available yet.</p>
                            <p className="text-sm">Analyze the job description to extract structured requirements.</p>
                       </div>

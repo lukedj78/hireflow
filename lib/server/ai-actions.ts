@@ -13,6 +13,7 @@ import { createPresignedDownloadUrl } from "@/lib/supabase-storage";
 import { nanoid } from "nanoid";
 import { triggerWorkflow } from "@/lib/events";
 import { NotificationService } from "@/lib/services/notification-service";
+import { checkOrgPermission } from "@/lib/server/permissions-check";
 
 /**
  * Esegue l'OCR su un file PDF tramite le API di Mistral.
@@ -206,14 +207,7 @@ export async function findMatchingCandidatesAction(jobId: string, limit: number 
 
         if (!job) return { success: false, error: "Job not found" };
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, job.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) return { success: false, error: "Unauthorized" };
+        await checkOrgPermission(job.organizationId, { jobPosting: ["update"] });
 
         if (!job.embedding) {
             return { success: false, error: "Job posting has no embedding. Please update the job description to generate one." };
@@ -297,14 +291,7 @@ export async function generateMatchAnalysisAction(applicationId: string) {
 
         if (!app) return { success: false, error: "Application not found" };
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, app.jobPosting.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
-
-        if (!membership) return { success: false, error: "Unauthorized" };
+        await checkOrgPermission(app.jobPosting.organizationId, { application: ["update"] });
 
         // Prepare data for AI
         const candidateData = {
@@ -421,18 +408,17 @@ export async function triggerCandidateParsingAction(candidateId: string) {
 
         const organizationIds = apps.map(app => app.jobPosting.organizationId);
 
-        // Check if user is member of any of these organizations
+        // Check if user is member of any of these organizations and has permission
         let authorized = false;
         for (const orgId of organizationIds) {
-            const membership = await db.query.organizationMember.findFirst({
-                where: and(
-                    eq(organizationMember.organizationId, orgId),
-                    eq(organizationMember.userId, session.user.id)
-                )
-            });
-            if (membership) {
+            try {
+                // Check if user has permission to update applications in this organization
+                await checkOrgPermission(orgId, { application: ["update"] });
                 authorized = true;
                 break;
+            } catch (error) {
+                // User not authorized for this organization, continue to next
+                continue;
             }
         }
 
@@ -515,16 +501,8 @@ export async function generateInterviewReportAction(interviewId: string) {
         }
 
         // Verify permissions
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, interviewRecord.job.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
+        await checkOrgPermission(interviewRecord.job.organizationId, { interview: ["update"] });
 
-        if (!membership) {
-            throw new Error("Unauthorized");
-        }
 
         if (!interviewRecord.notes) {
             throw new Error("No notes found for this interview. Please add notes first.");
@@ -585,16 +563,9 @@ export async function triggerJobParsingAction(jobId: string) {
 
         if (!job) return { success: false, error: "Job not found" };
 
-        const membership = await db.query.organizationMember.findFirst({
-            where: and(
-                eq(organizationMember.organizationId, job.organizationId),
-                eq(organizationMember.userId, session.user.id)
-            )
-        });
+        await checkOrgPermission(job.organizationId, { jobPosting: ["update"] });
 
-        if (!membership) return { success: false, error: "Unauthorized" };
-
-         if (!process.env.N8N_PARSING_WEBHOOK_URL) {
+        if (!process.env.N8N_PARSING_WEBHOOK_URL) {
             console.warn("N8N_PARSING_WEBHOOK_URL not configured. Skipping webhook call.");
             return { success: false, error: "N8N_PARSING_WEBHOOK_URL not configured" };
         }

@@ -18,12 +18,14 @@ interface Organization {
     logo?: string | null
 }
 
-export default function OrganizationSettingsClientPage({ initialOrg: org }: { initialOrg: Organization | null }) {
+export default function OrganizationSettingsClientPage({ initialOrg: org, currentUserRole }: { initialOrg: Organization | null, currentUserRole: string }) {
   const [name, setName] = useState(org?.name || "")
   const [slug, setSlug] = useState(org?.slug || "")
   const [isLoading, setIsLoading] = useState(false)
   const [isLeaving, setIsLeaving] = useState(false)
   const router = useRouter()
+
+  const canUpdateOrg = ["owner", "admin", "hr"].includes(currentUserRole)
 
   useEffect(() => {
     if (org) {
@@ -83,19 +85,31 @@ export default function OrganizationSettingsClientPage({ initialOrg: org }: { in
           <CardContent className="space-y-4">
               <div className="grid gap-2">
                   <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                  <Input 
+                    id="name" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    disabled={!canUpdateOrg}
+                  />
               </div>
               <div className="grid gap-2">
                   <Label htmlFor="slug">Slug</Label>
-                  <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} />
+                  <Input 
+                    id="slug" 
+                    value={slug} 
+                    onChange={(e) => setSlug(e.target.value)} 
+                    disabled={!canUpdateOrg}
+                  />
               </div>
           </CardContent>
+          {canUpdateOrg && (
           <CardFooter>
               <Button onClick={handleUpdate} disabled={isLoading}>
                   {isLoading && <CircleNotchIcon className="mr-2 h-4 w-4 animate-spin" />}
                   Save Changes
               </Button>
           </CardFooter>
+          )}
       </Card>
 
       <Card className="border-red-200">

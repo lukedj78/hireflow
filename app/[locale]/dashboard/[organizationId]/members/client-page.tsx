@@ -51,13 +51,23 @@ export interface Member {
   createdAt: Date
 }
 
-export default function MembersClientPage({ initialMembers: members, activeOrgId }: { initialMembers: Member[], activeOrgId: string }) {
+export default function MembersClientPage({ 
+  initialMembers: members, 
+  activeOrgId,
+  currentUserRole 
+}: { 
+  initialMembers: Member[], 
+  activeOrgId: string,
+  currentUserRole: string
+}) {
 
   const [isInviteOpen, setIsInviteOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState("")
   const [inviteRole, setInviteRole] = useState("member")
   const [isInviting, setIsInviting] = useState(false)
   const router = useRouter()
+
+  const canManageMembers = ["owner", "admin"].includes(currentUserRole);
 
   const handleRemoveMember = async (memberId: string) => {
     if (!activeOrgId) return
@@ -173,18 +183,22 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
                 <EyeIcon className="h-4 w-4" />
                 View Details
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "admin")}>
-                <ShieldIcon className="h-4 w-4" />
-                Make Admin
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "member")}>
-                <UserIcon className="h-4 w-4" />
-                Make Member
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveMember(member.id)}>
-                <TrashIcon className="h-4 w-4" />
-                Remove
-              </DropdownMenuItem>
+              {canManageMembers && (
+                <>
+                  <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "admin")}>
+                    <ShieldIcon className="h-4 w-4" />
+                    Make Admin
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "member")}>
+                    <UserIcon className="h-4 w-4" />
+                    Make Member
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveMember(member.id)}>
+                    <TrashIcon className="h-4 w-4" />
+                    Remove
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         )
@@ -201,6 +215,7 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
             Manage your organization members and their roles.
           </p>
         </div>
+        {canManageMembers && (
         <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
           <DialogTrigger render={
              <Button className={buttonVariants()}>
@@ -247,6 +262,7 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        )}
       </div>
       <DataTable columns={columns} data={members} />
     </div>

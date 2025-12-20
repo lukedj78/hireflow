@@ -36,12 +36,12 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 type ApplicationWithCandidate = Application & {
-    candidate: Candidate & {
+    candidate: Omit<Candidate, "embedding"> & {
         files?: InferSelectModel<typeof candidateFile>[];
+        embedding?: unknown;
     };
 };
 
@@ -166,10 +166,10 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
                         onValueChange={(val) => handleStatusChange(app.id, val as ApplicationStatus)}
                         disabled={isPending}
                     >
-                        <SelectTrigger className="w-[140px]">
+                        <SelectTrigger>
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="w-full">
                             <SelectItem value="applied">Applied</SelectItem>
                             <SelectItem value="screening">Screening</SelectItem>
                             <SelectItem value="interview">Interview</SelectItem>
@@ -193,18 +193,18 @@ export default function ApplicationsClientPage({ job, applications }: Applicatio
                                 <DotsThreeIcon className="h-4 w-4" />
                             </Button>
                         }/>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-full">
                             <DropdownMenuItem onClick={() => handleViewResume(app.candidate)}>
-                                <FileTextIcon className="mr-2 h-4 w-4" />
+                                <FileTextIcon className="h-4 w-4" />
                                 View Resume
                             </DropdownMenuItem>
                              <DropdownMenuItem onClick={() => router.push(`/dashboard/${job.organizationId}/jobs/${job.id}/applications/${app.id}`)}>
-                                <EyeIcon className="mr-2 h-4 w-4" />
+                                <EyeIcon className="h-4 w-4" />
                                 View Details
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                              <DropdownMenuItem className="text-destructive" onClick={() => setApplicationToDelete(app.id)}>
-                                <TrashIcon className="mr-2 h-4 w-4" />
+                                <TrashIcon className="h-4 w-4" />
                                 Delete
                             </DropdownMenuItem>
                         </DropdownMenuContent>

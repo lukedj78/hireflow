@@ -3,7 +3,7 @@
 import { Button, buttonVariants } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { CircleNotchIcon, DotsThreeIcon, TrashIcon, Eye, Shield, User } from "@phosphor-icons/react"
+import { CircleNotchIcon, DotsThreeIcon, TrashIcon, EyeIcon, ShieldIcon, UserIcon } from "@phosphor-icons/react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,21 +168,21 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
                 <DotsThreeIcon className="h-4 w-4" />
               </Button>
             }/>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-full">
               <DropdownMenuItem onClick={() => router.push(`/dashboard/${activeOrgId}/members/${member.id}`)}>
-                <Eye className="mr-2 h-4 w-4" />
+                <EyeIcon className="h-4 w-4" />
                 View Details
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "admin")}>
-                <Shield className="mr-2 h-4 w-4" />
+                <ShieldIcon className="h-4 w-4" />
                 Make Admin
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleUpdateRole(member.id, "member")}>
-                <User className="mr-2 h-4 w-4" />
+                <UserIcon className="h-4 w-4" />
                 Make Member
               </DropdownMenuItem>
               <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveMember(member.id)}>
-                <TrashIcon className="mr-2 h-4 w-4" />
+                <TrashIcon className="h-4 w-4" />
                 Remove
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -241,7 +241,7 @@ export default function MembersClientPage({ initialMembers: members, activeOrgId
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsInviteOpen(false)}>Cancel</Button>
               <Button onClick={handleInvite} disabled={isInviting}>
-                {isInviting && <CircleNotchIcon className="mr-2 h-4 w-4 animate-spin" />}
+                {isInviting && <CircleNotchIcon className="h-4 w-4 animate-spin" />}
                 Invite
               </Button>
             </DialogFooter>

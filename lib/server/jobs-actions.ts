@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { db } from "@/lib/db";
 import { jobPosting, organizationMember } from "@/lib/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, like, or, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 import { generateEmbedding } from "./ai-actions";
@@ -161,16 +161,57 @@ export async function getJobBySlugAction(slug: string) {
     }
 }
 
-export async function getPublicJobsAction() {
+export async function getPublicJobsAction(
+    page: number = 1,
+    limit: number = 10,
+    search?: string
+) {
     try {
+        const offset = (page - 1) * limit;
+
+        const whereConditions = [eq(jobPosting.status, "published")];
+
+        if (search) {
+            const searchLower = `%${search.toLowerCase()}%`;
+            const searchCondition = or(
+                like(sql`lower(${jobPosting.title})`, searchLower),
+                like(sql`lower(${jobPosting.description})`, searchLower),
+                like(sql`lower(${jobPosting.location})`, searchLower)
+            );
+            if (searchCondition) {
+                whereConditions.push(searchCondition);
+            }
+        }
+
         const jobs = await db.query.jobPosting.findMany({
-            where: eq(jobPosting.status, "published"),
+            where: and(...whereConditions),
             orderBy: [desc(jobPosting.createdAt)],
+            limit: limit,
+            offset: offset,
             with: {
                 organization: true
             }
         });
-        return { success: true, data: jobs };
+
+        // Get total count for pagination
+        const jobsCount = await db
+            .select({ count: sql<number>`count(*)` })
+            .from(jobPosting)
+            .where(and(...whereConditions));
+
+        const totalJobs = jobsCount[0].count;
+        const totalPages = Math.ceil(totalJobs / limit);
+
+        return { 
+            success: true, 
+            data: jobs,
+            pagination: {
+                page,
+                limit,
+                totalJobs,
+                totalPages
+            }
+        };
     } catch (error) {
         return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
     }

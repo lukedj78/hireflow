@@ -28,6 +28,32 @@ export type SubmitApplicationData = {
  * Attiva un evento 'application.created' per notificare il sistema.
  * Notifica anche i membri dell'organizzazione.
  */
+export async function checkApplicationStatusAction(jobSlug: string) {
+    const session = await auth.api.getSession({ headers: await headers() });
+    if (!session) return { hasApplied: false };
+
+    const job = await db.query.jobPosting.findFirst({
+        where: eq(jobPosting.slug, jobSlug),
+    });
+
+    if (!job) return { hasApplied: false };
+
+    const existingCandidate = await db.query.candidate.findFirst({
+        where: eq(candidate.userId, session.user.id),
+    });
+
+    if (!existingCandidate) return { hasApplied: false };
+
+    const existingApplication = await db.query.application.findFirst({
+        where: and(
+            eq(application.jobPostingId, job.id),
+            eq(application.candidateId, existingCandidate.id)
+        ),
+    });
+
+    return { hasApplied: !!existingApplication };
+}
+
 export async function submitApplicationAction(data: SubmitApplicationData) {
     // 1. Verify Authentication
     const session = await auth.api.getSession({ headers: await headers() });
@@ -174,11 +200,26 @@ export async function updateApplicationStatusAction(applicationId: string, statu
             where: eq(application.id, applicationId),
             with: {
                 jobPosting: {
+                    columns: {
+                        id: true,
+                        title: true,
+                        slug: true,
+                        organizationId: true,
+                        status: true,
+                    },
                     with: {
                         organization: true
                     }
                 },
-                candidate: true // Add candidate relation
+                candidate: {
+                    columns: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        userId: true,
+                        resumeUrl: true,
+                    }
+                } 
             }
         });
 
@@ -242,7 +283,12 @@ export async function deleteApplicationAction(applicationId: string) {
         const app = await db.query.application.findFirst({
             where: eq(application.id, applicationId),
             with: {
-                jobPosting: true
+                jobPosting: {
+                    columns: {
+                        id: true,
+                        organizationId: true,
+                    }
+                }
             }
         });
 

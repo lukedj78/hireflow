@@ -216,6 +216,12 @@ export async function updateInterviewAction(interviewId: string, data: Partial<C
             where: eq(interview.id, interviewId),
             with: {
                 job: {
+                    columns: {
+                        id: true,
+                        title: true,
+                        organizationId: true,
+                        status: true,
+                    },
                     with: {
                         organization: true
                     }
@@ -314,6 +320,11 @@ export async function deleteInterviewAction(interviewId: string) {
             where: eq(interview.id, interviewId),
             with: {
                 job: {
+                    columns: {
+                        id: true,
+                        title: true,
+                        organizationId: true,
+                    },
                     with: {
                         organization: true
                     }

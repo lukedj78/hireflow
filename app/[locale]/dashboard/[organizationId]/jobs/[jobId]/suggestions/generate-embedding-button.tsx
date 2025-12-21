@@ -38,9 +38,9 @@ export function GenerateEmbeddingButton({ jobId }: GenerateEmbeddingButtonProps)
             className="w-fit"
         >
             {isLoading ? (
-                <Sparkle className="mr-2 h-4 w-4 animate-spin" />
+                <Sparkle className="h-4 w-4 animate-spin" />
             ) : (
-                <Sparkle className="mr-2 h-4 w-4" />
+                <Sparkle className="h-4 w-4" />
             )}
             Generate AI Embeddings
         </Button>

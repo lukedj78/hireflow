@@ -39,6 +39,14 @@
   "Jobs": {
     "title": "Jobs",
     "description": "Manage your job postings here.",
+    "searchPlaceholder": "Search jobs...",
+    "allStatuses": "All Statuses",
+    "status": {
+      "published": "Published",
+      "draft": "Draft",
+      "closed": "Closed"
+    },
+    "allTypes": "All Types",
     "create": "Create Job",
     "edit": "Edit",
     "delete": "Delete",

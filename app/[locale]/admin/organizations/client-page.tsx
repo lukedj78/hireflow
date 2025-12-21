@@ -146,7 +146,7 @@ export default function AdminOrganizationsClientPage({ initialOrgs: orgs }: { in
                             </div>
                             <DialogFooter>
                                 <Button type="submit" disabled={isSubmitting}>
-                                    {isSubmitting && <CircleNotchIcon className="mr-2 h-4 w-4 animate-spin" />}
+                                    {isSubmitting && <CircleNotchIcon className="h-4 w-4 animate-spin" />}
                                     Create Organization
                                 </Button>
                             </DialogFooter>

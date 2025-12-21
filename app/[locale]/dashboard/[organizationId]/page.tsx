@@ -1,7 +1,7 @@
 import { PageLayout } from "@/components/page-layout"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { db } from "@/lib/db"
-import { jobPosting, application, candidate } from "@/lib/db/schema"
+import { jobPosting, application, candidate, user } from "@/lib/db/schema"
 import { eq, count, desc, sql } from "drizzle-orm"
 import { OverviewChart } from "@/components/dashboard/overview-chart"
 import { RecentActivity } from "@/components/dashboard/recent-activity"
@@ -17,7 +17,10 @@ interface DashboardStats {
     id: string
     candidateName: string
     candidateEmail: string
+    candidateAvatarUrl: string
     jobTitle: string
+    jobId: string
+    organizationId: string
     status: string
     appliedAt: Date
   }[]
@@ -80,11 +83,15 @@ async function getDashboardStats(organizationId: string): Promise<DashboardStats
       appliedAt: application.createdAt,
       candidateName: candidate.name,
       candidateEmail: candidate.email,
+      candidateAvatarUrl: user.image,
       jobTitle: jobPosting.title,
+      jobId: jobPosting.id,
+      organizationId: jobPosting.organizationId,
     })
     .from(application)
     .innerJoin(jobPosting, eq(application.jobPostingId, jobPosting.id))
     .innerJoin(candidate, eq(application.candidateId, candidate.id))
+    .leftJoin(user, eq(candidate.userId, user.id))
     .where(eq(jobPosting.organizationId, organizationId))
     .orderBy(desc(application.createdAt))
     .limit(5);
@@ -97,6 +104,7 @@ async function getDashboardStats(organizationId: string): Promise<DashboardStats
     applicationsByStatus: chartData,
     recentApplications: recentApps.map(app => ({
         ...app,
+        candidateAvatarUrl: app.candidateAvatarUrl || "",
         appliedAt: app.appliedAt || new Date()
     })),
   };

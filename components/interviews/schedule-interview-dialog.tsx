@@ -255,7 +255,7 @@ export function ScheduleInterviewDialog({
 
                         <DialogFooter>
                             <Button type="submit" disabled={isSubmitting}>
-                                {isSubmitting && <CircleNotchIcon className="mr-2 h-4 w-4 animate-spin" />}
+                                {isSubmitting && <CircleNotchIcon className="h-4 w-4 animate-spin" />}
                                 Schedule Interview
                             </Button>
                         </DialogFooter>

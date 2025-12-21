@@ -81,14 +81,14 @@ export function HeaderAuth({ user }: HeaderAuthProps) {
         <DropdownMenuGroup>
           <DropdownMenuItem>
             <Link href="/dashboard" className="flex w-full items-center">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
+              <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="h-4 w-4" />
           Log out
         </DropdownMenuItem>
       </DropdownMenuContent>

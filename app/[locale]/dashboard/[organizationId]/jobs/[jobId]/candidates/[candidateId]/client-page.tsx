@@ -184,7 +184,7 @@ export default function CandidateClientPage({ candidate, organizationId, jobId }
                                         </>
                                     ) : (
                                         <>
-                                            <EnvelopeIcon className="mr-2 h-4 w-4" />
+                                            <EnvelopeIcon className="h-4 w-4" />
                                             Send Invitation
                                         </>
                                     )}

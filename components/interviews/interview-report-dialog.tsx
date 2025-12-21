@@ -114,7 +114,7 @@ export function InterviewReportDialog({ open, onOpenChange, interview }: Intervi
                                 onClick={handleGenerate} 
                                 disabled={isGenerating || !notes}
                             >
-                                {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                                {isGenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
                                 Generate with AI
                             </Button>
                         </div>
@@ -149,7 +149,7 @@ export function InterviewReportDialog({ open, onOpenChange, interview }: Intervi
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
                     <Button onClick={handleSave} disabled={isSaving}>
-                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isSaving && <Loader2 className="h-4 w-4 animate-spin" />}
                         Save Changes
                     </Button>
                 </DialogFooter>

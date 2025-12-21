@@ -117,11 +117,11 @@ export default function CandidateApplicationsClientPage() {
                         }/>
                         <DropdownMenuContent align="end">
                             <DropdownMenuItem>
-                                <EyeIcon className="mr-2 h-4 w-4" />
+                                <EyeIcon className="h-4 w-4" />
                                 View Details
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive">
-                                <TrashIcon className="mr-2 h-4 w-4" />
+                                <TrashIcon className="h-4 w-4" />
                                 Withdraw
                             </DropdownMenuItem>
                         </DropdownMenuContent>

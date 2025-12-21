@@ -129,7 +129,7 @@ export default function JobsClientPage({ jobs }: JobsClientPageProps) {
                         className="w-full" 
                         onClick={clearFilters}
                     >
-                        <X className="mr-2 h-4 w-4" />
+                        <X className="h-4 w-4" />
                         Clear Filters
                     </Button>
                 </>
@@ -151,7 +151,7 @@ export default function JobsClientPage({ jobs }: JobsClientPageProps) {
                 <div className="lg:hidden mb-4">
                     <Sheet>
                         <SheetTrigger className={cn(buttonVariants({ variant: "outline" }), "w-full")}>
-                            <Filter className="mr-2 h-4 w-4" />
+                            <Filter className="h-4 w-4" />
                             Filters
                         </SheetTrigger>
                         <SheetContent side="left">

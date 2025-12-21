@@ -216,7 +216,7 @@ export default function CandidateOnboardingPage() {
                         </CardContent>
                         <CardFooter className="flex justify-between">
                             <Button variant="outline" onClick={handleBack}>
-                                <ArrowLeftIcon className="mr-2 h-4 w-4" /> Back
+                                <ArrowLeftIcon className="h-4 w-4" /> Back
                             </Button>
                             <Button onClick={handleNext}>
                                 Next <ArrowRightIcon className="ml-2 h-4 w-4" />
@@ -249,7 +249,7 @@ export default function CandidateOnboardingPage() {
                         </CardContent>
                         <CardFooter className="flex justify-between">
                             <Button variant="outline" onClick={handleBack} disabled={isLoading}>
-                                <ArrowLeftIcon className="mr-2 h-4 w-4" /> Back
+                                <ArrowLeftIcon className="h-4 w-4" /> Back
                             </Button>
                             <Button onClick={handleSubmit} disabled={isLoading}>
                                 {isLoading ? "Setting up..." : "Complete Setup"} 

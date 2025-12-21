@@ -105,7 +105,7 @@ export default function OrganizationSettingsClientPage({ initialOrg: org, curren
           {canUpdateOrg && (
           <CardFooter>
               <Button onClick={handleUpdate} disabled={isLoading}>
-                  {isLoading && <CircleNotchIcon className="mr-2 h-4 w-4 animate-spin" />}
+                  {isLoading && <CircleNotchIcon className="h-4 w-4 animate-spin" />}
                   Save Changes
               </Button>
           </CardFooter>
@@ -131,7 +131,7 @@ export default function OrganizationSettingsClientPage({ initialOrg: org, curren
                       </p>
                   </div>
                   <Button variant="destructive" onClick={handleLeave} disabled={isLeaving}>
-                      {isLeaving && <CircleNotchIcon className="mr-2 h-4 w-4 animate-spin" />}
+                      {isLeaving && <CircleNotchIcon className="h-4 w-4 animate-spin" />}
                       Leave Organization
                   </Button>
               </div>

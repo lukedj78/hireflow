@@ -106,7 +106,7 @@ export default function TeamsClientPage({ initialTeams: teams, activeOrgId }: { 
             }/>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => handleDeleteTeam(team.id)} className="text-destructive">
-                <TrashIcon className="mr-2 h-4 w-4" />
+                <TrashIcon className="h-4 w-4" />
                 Delete Team
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -151,7 +151,7 @@ export default function TeamsClientPage({ initialTeams: teams, activeOrgId }: { 
                 <DialogFooter>
                     <Button variant="outline" onClick={() => setIsCreateOpen(false)}>Cancel</Button>
                     <Button onClick={handleCreateTeam} disabled={isCreating}>
-                        {isCreating && <CircleNotchIcon className="mr-2 h-4 w-4 animate-spin" />}
+                        {isCreating && <CircleNotchIcon className="h-4 w-4 animate-spin" />}
                         Create
                     </Button>
                 </DialogFooter>

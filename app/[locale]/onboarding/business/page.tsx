@@ -89,7 +89,7 @@ export default function BusinessOnboardingPage() {
                     </CardContent>
                     <CardFooter className="flex justify-between">
                         <Button type="button" variant="outline" onClick={() => router.push("/onboarding")} disabled={isLoading}>
-                            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                            <ArrowLeft className="h-4 w-4" /> Back
                         </Button>
                         <Button type="submit" disabled={isLoading}>
                             {isLoading ? "Creating..." : "Create Organization"} 

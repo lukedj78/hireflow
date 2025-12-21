@@ -39,6 +39,14 @@
   "Jobs": {
     "title": "Annunci di Lavoro",
     "description": "Gestisci i tuoi annunci di lavoro qui.",
+    "searchPlaceholder": "Cerca annunci...",
+    "allStatuses": "Tutti gli stati",
+    "status": {
+      "published": "Pubblicato",
+      "draft": "Bozza",
+      "closed": "Chiuso"
+    },
+    "allTypes": "Tutti i tipi",
     "create": "Crea Annuncio",
     "edit": "Modifica",
     "delete": "Elimina",

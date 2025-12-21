@@ -197,30 +197,30 @@ export default function AdminUsersClientPage({ initialUsers: users }: { initialU
                         }/>
                         <DropdownMenuContent align="end" className="w-full">
                             <DropdownMenuItem onClick={() => router.push(`/admin/users/${user.id}`)}>
-                                <EyeIcon className="mr-2 h-4 w-4" />
+                                <EyeIcon className="h-4 w-4" />
                                 View details
                             </DropdownMenuItem>
                             {user.banned ? (
                                 <DropdownMenuItem onClick={() => handleUnban(user.id)}>
-                                    <UserCheckIcon className="mr-2 h-4 w-4" />
+                                    <UserCheckIcon className="h-4 w-4" />
                                     Unban
                                 </DropdownMenuItem>
                             ) : (
                                 <DropdownMenuItem onClick={() => setUserToBan(user.id)} className="text-orange-500">
-                                    <ProhibitIcon className="mr-2 h-4 w-4" />
+                                    <ProhibitIcon className="h-4 w-4" />
                                     Ban
                                 </DropdownMenuItem>
                             )}
                             <DropdownMenuItem onClick={() => handleImpersonate(user.id)}>
-                                <KeyIcon className="mr-2 h-4 w-4" />
+                                <KeyIcon className="h-4 w-4" />
                                 Impersonate
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleViewAccounts(user)}>
-                                <LinkBreakIcon className="mr-2 h-4 w-4" />
+                                <LinkBreakIcon className="h-4 w-4" />
                                 View Accounts
                             </DropdownMenuItem>
                             <DropdownMenuItem className="text-destructive" onClick={() => setUserToDelete(user.id)}>
-                                <TrashIcon className="mr-2 h-4 w-4" />
+                                <TrashIcon className="h-4 w-4" />
                                 Delete
                             </DropdownMenuItem>
                         </DropdownMenuContent>

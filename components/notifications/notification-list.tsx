@@ -110,14 +110,14 @@ export function NotificationList({ initialNotifications, organizationId }: Notif
                 <div className="flex gap-2">
                     {unreadCount > 0 && (
                         <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
-                            <CheckCheck className="mr-2 h-4 w-4" /> Mark all as read
+                            <CheckCheck className="h-4 w-4" /> Mark all as read
                         </Button>
                     )}
                     {notifications.length > 0 && (
                         <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                             <AlertDialogTrigger render={
                                 <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" /> Delete all
+                                    <Trash2 className="h-4 w-4" /> Delete all
                                 </Button>
                             } />
                             <AlertDialogContent>
@@ -210,7 +210,7 @@ export function NotificationList({ initialNotifications, organizationId }: Notif
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
                                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                <AlertDialogAction onClick={() => handleDelete(notification.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                                                <AlertDialogAction onClick={() => handleDelete(notification.id)} className="bg-destructive hover:bg-destructive/90">
                                                     Delete
                                                 </AlertDialogAction>
                                             </AlertDialogFooter>

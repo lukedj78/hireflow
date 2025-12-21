@@ -48,7 +48,7 @@ export function JobApplicationForm({ jobSlug, jobTitle }: JobApplicationFormProp
   if (isLoading) {
     return (
       <Button disabled variant="outline" className="w-full md:w-auto">
-        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <Loader2 className="h-4 w-4 animate-spin" />
         Checking status...
       </Button>
     )
@@ -57,7 +57,7 @@ export function JobApplicationForm({ jobSlug, jobTitle }: JobApplicationFormProp
   if (hasApplied) {
     return (
       <Button disabled variant="secondary" className="w-full md:w-auto text-green-600 font-medium">
-        <CheckCircle2 className="mr-2 h-4 w-4" />
+        <CheckCircle2 className="h-4 w-4" />
         Applied
       </Button>
     )
@@ -65,7 +65,7 @@ export function JobApplicationForm({ jobSlug, jobTitle }: JobApplicationFormProp
 
   return (
     <Button onClick={handleApply} disabled={isSubmitting} className="w-full md:w-auto">
-      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+      {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
       Apply Now
     </Button>
   )

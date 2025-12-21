@@ -100,12 +100,12 @@ export default function JobsClientPage({ initialJobs, organizationId, currentUse
                 <>
                   <DropdownMenuItem>
                       <Link href={`/dashboard/${organizationId}/jobs/${job.id}`} className="flex w-full items-center">
-                          <Pencil className="mr-2 h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                           {t("edit")}
                       </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(job.id)}>
-                    <Trash className="mr-2 h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                     {t("delete")}
                   </DropdownMenuItem>
                 </>
@@ -126,11 +126,11 @@ export default function JobsClientPage({ initialJobs, organizationId, currentUse
           canManageJobs ? (
           <div className="flex gap-2">
             <Link href={`/dashboard/${organizationId}/jobs/ai-new`} className={buttonVariants({ variant: "secondary" })}>
-              <Sparkles className="mr-2 h-4 w-4" />
+              <Sparkles className="h-4 w-4" />
               AI Create
             </Link>
             <Link href={`/dashboard/${organizationId}/jobs/new`} className={buttonVariants()}>
-              <Plus className="mr-2 h-4 w-4" />
+              <Plus className="h-4 w-4" />
               {t("create")}
             </Link>
           </div>

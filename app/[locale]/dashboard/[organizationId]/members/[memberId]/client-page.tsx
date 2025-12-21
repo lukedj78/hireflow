@@ -185,7 +185,7 @@ export default function MemberClientPage({ member, organizationId }: MemberClien
                   <h4 className="text-sm font-medium text-destructive mb-2">Danger Zone</h4>
                   <AlertDialog>
                     <AlertDialogTrigger className={buttonVariants({ variant: "destructive", className: "w-full sm:w-auto" })}>
-                        <TrashIcon className="mr-2 h-4 w-4" />
+                        <TrashIcon className="h-4 w-4" />
                         Remove Member
                     </AlertDialogTrigger>
                     <AlertDialogContent>

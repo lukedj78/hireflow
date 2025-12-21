@@ -30,7 +30,7 @@ export default async function JobDetailsPage({ params }: JobDetailsPageProps) {
             href="/dashboard/candidate/jobs" 
             className="flex items-center text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
         >
-            <ArrowLeft className="mr-2 h-4 w-4" />
+            <ArrowLeft className="h-4 w-4" />
             Back to Jobs
         </Link>
         

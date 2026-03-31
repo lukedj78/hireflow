@@ -84,10 +84,10 @@ export async function parseJobDescriptionAction(description: string) {
         });
 
         const { object } = await generateObject({
-            model: mistral("mistral-large-latest"),
+            model: mistral("mistral-small-latest"),
             schema: schema,
             prompt: `Extract the job details from the following job description. Format the description in clean Markdown.
-            
+
             Job Description:
             ${description}`
         });
@@ -133,7 +133,7 @@ export async function fallbackResumeParsingAction(candidateId: string, resumeKey
         });
 
         const result = await generateObject({
-            model: mistral('mistral-large-latest'),
+            model: mistral('mistral-small-latest'),
             schema: resumeSchema,
             prompt: `You are an expert HR Recruiter. Analyze this resume text and extract structured data:\n\n${ocrText}`,
         });
@@ -308,7 +308,7 @@ export async function generateMatchAnalysisAction(applicationId: string) {
         };
 
         const { object } = await generateObject({
-            model: 'gpt-4o',
+            model: 'gpt-4o-mini',
             schema: z.object({
                 score: z.number().min(0).max(100).describe("Match score between 0 and 100"),
                 analysis: z.string().describe("Detailed analysis of the match"),
@@ -528,7 +528,7 @@ export async function generateInterviewReportAction(interviewId: string) {
         `;
 
         const { text } = await generateText({
-            model: mistral('mistral-large-latest'),
+            model: mistral('mistral-small-latest'),
             prompt: prompt,
         });
         

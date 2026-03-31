@@ -30,6 +30,7 @@ export default function JobCreationAgent({ organizationId }: { organizationId: s
   const [inputValue, setInputValue] = useState("");
   const [isPending, setIsPending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const initRef = useRef(false);
   const router = useRouter();
 
   // Auto-scroll
@@ -39,9 +40,10 @@ export default function JobCreationAgent({ organizationId }: { organizationId: s
     }
   }, [messages]);
 
-  // Initial greeting
+  // Initial greeting (ref prevents StrictMode double-fire)
   useEffect(() => {
-    if (messages.length === 0) {
+    if (!initRef.current) {
+      initRef.current = true;
       handleSendMessage("Start job creation", true);
     }
   }, []);

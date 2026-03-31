@@ -67,10 +67,8 @@ export const adminRole = ac.newRole({
 });
 
 export const businessRole = ac.newRole({
-    organization: ["create", "update", "delete", "leave"],
-    member: ["create", "read", "update", "delete"],
-    invitation: ["create", "read", "cancel", "accept", "reject"],
-    team: ["create", "read", "update", "delete"]
+    organization: ["create", "leave"],
+    invitation: ["read", "accept", "reject"],
 });
 
 export const candidateRole = ac.newRole({

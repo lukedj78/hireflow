@@ -23,6 +23,11 @@ export default function DashboardPage() {
       return
     }
 
+    if (session.user.role === "admin") {
+      router.push("/admin")
+      return
+    }
+
     if (session.user.role === "candidate") {
         router.push("/dashboard/candidate");
         return;

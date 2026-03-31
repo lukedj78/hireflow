@@ -32,9 +32,9 @@ export default function JobsClientPage({ initialJobs, organizationId, currentUse
   const t = useTranslations("Jobs")
   const router = useRouter()
   
-  const [search, setSearch] = useQueryState('q', parseAsString.withDefault('').withOptions({ throttleMs: 500 }))
-  const [status, setStatus] = useQueryState('status', parseAsString.withDefault('all'))
-  const [type, setType] = useQueryState('type', parseAsString.withDefault('all'))
+  const [search, setSearch] = useQueryState('q', parseAsString.withDefault('').withOptions({ throttleMs: 500, shallow: false }))
+  const [status, setStatus] = useQueryState('status', parseAsString.withDefault('all').withOptions({ shallow: false }))
+  const [type, setType] = useQueryState('type', parseAsString.withDefault('all').withOptions({ shallow: false }))
 
   const canManageJobs = ["owner", "admin", "hr"].includes(currentUserRole);
 

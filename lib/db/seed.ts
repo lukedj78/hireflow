@@ -292,28 +292,33 @@ async function seed() {
     // ══════════════════════════════════════════════════
     console.log("🎥 Creating interviews...");
 
+    const iid = {
+      davidDesigner: nanoid(), ninaSupply: nanoid(), mikeLab: nanoid(),
+      kevinSafety: nanoid(), lauraMktg: nanoid(),
+    };
+
     await db.insert(interview).values([
       // David — interview for Product Designer at Acme (upcoming)
       {
-        id: nanoid(), applicationId: aid.davidDesigner, organizerId: uid.alice, candidateId: cid.david, jobId: jid.acmeDesigner,
+        id: iid.davidDesigner, applicationId: aid.davidDesigner, organizerId: uid.alice, candidateId: cid.david, jobId: jid.acmeDesigner,
         startTime: hoursFromNow(26), endTime: hoursFromNow(27),
-        status: "scheduled", location: "Video Call", meetingProvider: "mock", meetingLink: "/room/david-designer",
+        status: "scheduled", location: "Video Call", meetingProvider: "mock", meetingLink: `/room/${iid.davidDesigner}`,
       },
       // Nina — interview for Supply Chain at Soylent (upcoming)
       {
-        id: nanoid(), applicationId: aid.ninaSupply, organizerId: uid.ivan, candidateId: cid.nina, jobId: jid.soylentSupply,
+        id: iid.ninaSupply, applicationId: aid.ninaSupply, organizerId: uid.ivan, candidateId: cid.nina, jobId: jid.soylentSupply,
         startTime: hoursFromNow(50), endTime: hoursFromNow(51),
-        status: "scheduled", location: "Video Call", meetingProvider: "mock", meetingLink: "/room/nina-supply",
+        status: "scheduled", location: "Video Call", meetingProvider: "mock", meetingLink: `/room/${iid.ninaSupply}`,
       },
       // Mike — interview for Lab Assistant at Soylent (upcoming)
       {
-        id: nanoid(), applicationId: aid.mikeLab, organizerId: uid.ivan, candidateId: cid.mike, jobId: jid.soylentLab,
+        id: iid.mikeLab, applicationId: aid.mikeLab, organizerId: uid.ivan, candidateId: cid.mike, jobId: jid.soylentLab,
         startTime: hoursFromNow(74), endTime: hoursFromNow(75),
-        status: "scheduled", location: "Video Call", meetingProvider: "mock", meetingLink: "/room/mike-lab",
+        status: "scheduled", location: "Video Call", meetingProvider: "mock", meetingLink: `/room/${iid.mikeLab}`,
       },
       // Kevin — completed interview for Safety Inspector at Globex (with notes + report)
       {
-        id: nanoid(), applicationId: aid.kevinSafety, organizerId: uid.frank, candidateId: cid.kevin, jobId: jid.globexSafety,
+        id: iid.kevinSafety, applicationId: aid.kevinSafety, organizerId: uid.frank, candidateId: cid.kevin, jobId: jid.globexSafety,
         startTime: daysAgo(10), endTime: daysAgo(10),
         status: "completed", location: "Springfield Office", meetingProvider: "mock",
         notes: "Kevin demonstrated excellent knowledge of nuclear safety protocols. He answered all technical questions correctly and showed strong situational awareness. Concern: tends to be very detail-oriented which could slow down routine inspections.",
@@ -321,7 +326,7 @@ async function seed() {
       },
       // Laura — cancelled interview for Marketing at Globex
       {
-        id: nanoid(), applicationId: aid.lauraMktg, organizerId: uid.grace, candidateId: cid.laura, jobId: jid.globexMktg,
+        id: iid.lauraMktg, applicationId: aid.lauraMktg, organizerId: uid.grace, candidateId: cid.laura, jobId: jid.globexMktg,
         startTime: daysAgo(5), endTime: daysAgo(5),
         status: "cancelled", location: "Video Call", meetingProvider: "mock",
       },

@@ -82,20 +82,20 @@ async function seed() {
       { id: uid.luigi, name: "Luigi Test", email: "luigi@test.it", role: "candidate" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "candidate" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Luigi" },
 
       // ── Acme Corp ──
-      { id: uid.alice, name: "Alice Admin", email: "alice@example.com", role: "user" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice" },
-      { id: uid.bob, name: "Bob Member", email: "bob@example.com", role: "user" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob" },
+      { id: uid.alice, name: "Alice Admin", email: "alice@example.com", role: "business" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alice" },
+      { id: uid.bob, name: "Bob Member", email: "bob@example.com", role: "business" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Bob" },
 
       // ── Globex Corp ──
-      { id: uid.frank, name: "Frank Globex", email: "frank@globex.com", role: "user" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Frank" },
-      { id: uid.grace, name: "Grace Admin", email: "grace@globex.com", role: "user" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Grace" },
-      { id: uid.heidi, name: "Heidi Member", email: "heidi@globex.com", role: "user" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Heidi" },
+      { id: uid.frank, name: "Frank Globex", email: "frank@globex.com", role: "business" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Frank" },
+      { id: uid.grace, name: "Grace Admin", email: "grace@globex.com", role: "business" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Grace" },
+      { id: uid.heidi, name: "Heidi Member", email: "heidi@globex.com", role: "business" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Heidi" },
 
       // ── Soylent Corp ──
-      { id: uid.ivan, name: "Ivan Soylent", email: "ivan@soylent.com", role: "user" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan" },
-      { id: uid.judy, name: "Judy Member", email: "judy@soylent.com", role: "user" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Judy" },
+      { id: uid.ivan, name: "Ivan Soylent", email: "ivan@soylent.com", role: "business" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Ivan" },
+      { id: uid.judy, name: "Judy Member", email: "judy@soylent.com", role: "business" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Judy" },
 
       // ── Acme HR ──
-      { id: uid.hannah, name: "Hannah HR", email: "hr@acme.com", role: "user" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Hannah" },
+      { id: uid.hannah, name: "Hannah HR", email: "hr@acme.com", role: "business" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "business" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Hannah" },
 
       // ── Candidati ──
       { id: uid.charlie, name: "Charlie Candidate", email: "charlie@example.com", role: "candidate" as const, emailVerified: true, onboardingCompleted: true, onboardingType: "candidate" as const, image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie" },

@@ -2,11 +2,12 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { PageLayout } from "@/components/page-layout";
 import { FileText, Calendar, Eye, Briefcase, UserCircle, Upload, Search } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default async function CandidateDashboardPage() {
     const session = await auth.api.getSession({ headers: await headers() });
@@ -128,16 +129,12 @@ export default async function CandidateDashboardPage() {
                                 {t("recommendedJobs.emptyDescription")}
                             </p>
                             <div className="flex gap-3">
-                                <Button variant="default" render={
-                                    ({ children, ...props }) => <Link {...props} href="/dashboard/candidate/profile">{children}</Link>
-                                }>
+                                <Link href="/dashboard/candidate/profile" className={cn(buttonVariants({ variant: "default" }))}>
                                     {t("recommendedJobs.completeProfile")}
-                                </Button>
-                                <Button variant="outline" render={
-                                    ({ children, ...props }) => <Link {...props} href="/dashboard/candidate/jobs">{children}</Link>
-                                }>
+                                </Link>
+                                <Link href="/dashboard/candidate/jobs" className={cn(buttonVariants({ variant: "outline" }))}>
                                     {t("recommendedJobs.browseJobs")}
-                                </Button>
+                                </Link>
                             </div>
                         </div>
                     </CardContent>

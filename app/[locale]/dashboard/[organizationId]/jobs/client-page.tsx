@@ -151,7 +151,7 @@ export default function JobsClientPage({ initialJobs, organizationId, currentUse
           </div>
           <Select value={status} onValueChange={(val) => setStatus(val)} defaultValue="all">
               <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder={t("allStatuses")} />
+                  <SelectValue />
               </SelectTrigger>
               <SelectContent>
                   <SelectItem value="all">{t("allStatuses")}</SelectItem>
@@ -162,7 +162,7 @@ export default function JobsClientPage({ initialJobs, organizationId, currentUse
           </Select>
           <Select value={type} onValueChange={(val) => setType(val)} defaultValue="all">
               <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder={t("allTypes")} />
+                  <SelectValue />
               </SelectTrigger>
               <SelectContent>
                   <SelectItem value="all">{t("allTypes")}</SelectItem>

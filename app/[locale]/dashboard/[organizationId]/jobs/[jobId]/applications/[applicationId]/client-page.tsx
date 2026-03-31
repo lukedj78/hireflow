@@ -295,7 +295,7 @@ export default function ApplicationDetailClientPage({
                                                 <div className="grid grid-cols-1 gap-4">
                                                     {analysis.pros && analysis.pros.length > 0 && (
                                                         <div>
-                                                            <h4 className="text-sm font-semibold flex items-center gap-2 mb-2 text-green-600">
+                                                            <h4 className="text-sm font-semibold flex items-center gap-2 mb-2 text-success">
                                                                 <ThumbsUpIcon className="h-4 w-4" /> Pros
                                                             </h4>
                                                             <ul className="text-sm list-disc list-inside space-y-1 text-muted-foreground">
@@ -308,7 +308,7 @@ export default function ApplicationDetailClientPage({
                                                     
                                                     {analysis.cons && analysis.cons.length > 0 && (
                                                         <div>
-                                                            <h4 className="text-sm font-semibold flex items-center gap-2 mb-2 text-red-600">
+                                                            <h4 className="text-sm font-semibold flex items-center gap-2 mb-2 text-destructive">
                                                                 <ThumbsDownIcon className="h-4 w-4" /> Cons
                                                             </h4>
                                                             <ul className="text-sm list-disc list-inside space-y-1 text-muted-foreground">

@@ -10,8 +10,8 @@ export function ForbiddenError() {
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background p-4 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
-        <ShieldWarningIcon className="h-10 w-10 text-red-600 dark:text-red-400" />
+      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-destructive/10">
+        <ShieldWarningIcon className="h-10 w-10 text-destructive" />
       </div>
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl">

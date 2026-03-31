@@ -3,7 +3,7 @@
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, FileText, Save, Wand2, Loader2 } from "lucide-react";
+import { Mic, MicOff, Video, VideoOff, PhoneOff, Users, FileText, Save, Wand2, Loader2, X } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
@@ -118,7 +118,7 @@ export function MockRoom({ interviewId, organizerName, candidateName, startTime,
 
     if (!isCallActive) {
         return (
-            <div className="flex h-screen w-full items-center justify-center bg-gray-50 p-4">
+            <div className="flex h-screen w-full items-center justify-center bg-background p-4">
                 <Card className="w-full max-w-md text-center">
                     <CardHeader>
                         <CardTitle>Call Ended</CardTitle>
@@ -138,57 +138,57 @@ export function MockRoom({ interviewId, organizerName, candidateName, startTime,
     }
 
     return (
-        <div className="flex h-screen w-full flex-col bg-slate-950 text-white">
+        <div className="flex h-screen w-full flex-col bg-background text-foreground dark">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 bg-slate-900 border-b border-slate-800">
+            <div className="flex items-center justify-between p-4 bg-card border-b border-border">
                 <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-blue-500/10 text-blue-400 border-blue-500/20">
+                    <Badge variant="outline" className="bg-info/10 text-info border-info/20">
                         Mock Provider
                     </Badge>
                     <h1 className="text-lg font-semibold">Interview Room</h1>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-400">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="h-4 w-4" />
                     <span>2 Participants</span>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex overflow-hidden relative">
                 <div className="flex-1 p-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full h-full">
                         {/* Remote User (Other Person) - Left Side */}
-                        <Card className="bg-slate-900 border-slate-800 h-full w-full flex flex-col items-center justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                        <Card className="bg-card border-border h-full w-full flex flex-col items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 flex items-center justify-center bg-muted">
                                 <Avatar className="h-24 w-24">
-                                    <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(isOrganizer ? candidateName : organizerName)}&background=random`} />
+                                    <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(isOrganizer ? candidateName : organizerName)}&background=random`} alt={isOrganizer ? candidateName : organizerName} />
                                     <AvatarFallback>{(isOrganizer ? candidateName : organizerName).substring(0, 2).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                             </div>
-                            <div className="absolute bottom-4 left-4 bg-black/50 text-white px-2 py-1 rounded text-sm flex items-center gap-2">
+                            <div className="absolute bottom-4 left-4 bg-background/70 text-foreground px-2 py-1 rounded text-sm flex items-center gap-2">
                                 <span>{isOrganizer ? candidateName : organizerName} ({isOrganizer ? "Candidate" : "Organizer"})</span>
-                                <Mic className="h-3 w-3 text-green-400" />
+                                <Mic className="h-3 w-3 text-success" />
                             </div>
                         </Card>
 
                         {/* Local User (You) - Right Side */}
-                        <Card className="bg-slate-900 border-slate-800 h-full w-full flex flex-col items-center justify-center relative overflow-hidden">
-                             <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                        <Card className="bg-card border-border h-full w-full flex flex-col items-center justify-center relative overflow-hidden">
+                             <div className="absolute inset-0 flex items-center justify-center bg-muted">
                                 {isVideoOn ? (
                                     <Avatar className="h-24 w-24">
-                                        <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(isOrganizer ? organizerName : candidateName)}&background=random`} />
+                                        <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(isOrganizer ? organizerName : candidateName)}&background=random`} alt={isOrganizer ? organizerName : candidateName} />
                                         <AvatarFallback>{(isOrganizer ? organizerName : candidateName).substring(0, 2).toUpperCase()}</AvatarFallback>
                                     </Avatar>
                                 ) : (
-                                    <div className="text-slate-500">Camera Off</div>
+                                    <div className="text-muted-foreground">Camera Off</div>
                                 )}
                             </div>
-                            <div className="absolute bottom-4 left-4 bg-black/50 text-white px-2 py-1 rounded text-sm flex items-center gap-2">
+                            <div className="absolute bottom-4 left-4 bg-background/70 text-foreground px-2 py-1 rounded text-sm flex items-center gap-2">
                                 <span>{isOrganizer ? organizerName : candidateName} (You)</span>
                                 {isMicOn ? (
-                                    <Mic className="h-3 w-3 text-green-400" />
+                                    <Mic className="h-3 w-3 text-success" />
                                 ) : (
-                                    <MicOff className="h-3 w-3 text-red-500" />
+                                    <MicOff className="h-3 w-3 text-destructive" />
                                 )}
                             </div>
                         </Card>
@@ -197,34 +197,44 @@ export function MockRoom({ interviewId, organizerName, candidateName, startTime,
 
                 {/* Notes Panel */}
                 {isOrganizer && isNotesOpen && (
-                    <div className="w-96 bg-slate-900 border-l border-slate-800 flex flex-col transition-all duration-300">
-                        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+                    <div className="absolute inset-0 md:relative md:inset-auto w-full md:w-96 bg-card border-l border-border flex flex-col transition-all duration-300 z-10">
+                        <div className="p-4 border-b border-border flex items-center justify-between">
                             <h2 className="font-semibold flex items-center gap-2">
                                 <FileText className="h-4 w-4" />
                                 Interview Notes
                             </h2>
+                            <Button
+                                variant="ghost"
+                                size="icon-xs"
+                                className="md:hidden"
+                                onClick={() => setIsNotesOpen(false)}
+                                aria-label="Close notes"
+                            >
+                                <X className="h-3 w-3" />
+                            </Button>
                         </div>
                         <div className="flex-1 p-4 overflow-y-auto">
-                            <Textarea 
+                            <Textarea
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
                                 placeholder="Type your notes here..."
-                                className="h-full min-h-[300px] bg-slate-950 border-slate-800 text-white resize-none focus-visible:ring-slate-700 placeholder:text-slate-600"
+                                className="h-full min-h-[300px] bg-background border-border resize-none placeholder:text-muted-foreground"
+                                aria-label="Interview notes"
                             />
                         </div>
-                        <div className="p-4 border-t border-slate-800 flex gap-2 flex-col">
-                             <Button 
-                                variant="default" 
-                                className="w-full bg-blue-600 hover:bg-blue-700"
+                        <div className="p-4 border-t border-border flex gap-2 flex-col">
+                             <Button
+                                variant="default"
+                                className="w-full"
                                 onClick={handleGenerateReport}
                                 disabled={isGenerating || isSaving}
                             >
                                 {isGenerating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Wand2 className="h-4 w-4 mr-2" />}
                                 Generate Report
                             </Button>
-                            <Button 
-                                variant="outline" 
-                                className="w-full border-slate-700 hover:bg-slate-800 text-white hover:text-white bg-transparent"
+                            <Button
+                                variant="outline"
+                                className="w-full"
                                 onClick={handleSaveNotes}
                                 disabled={isSaving}
                             >
@@ -237,13 +247,14 @@ export function MockRoom({ interviewId, organizerName, candidateName, startTime,
             </div>
 
             {/* Controls Bar */}
-            <div className="p-6 bg-slate-900 border-t border-slate-800 flex justify-center gap-4 relative items-center">
+            <div className="p-6 bg-card border-t border-border flex justify-center gap-4 relative items-center">
                 <div className="flex gap-4">
                     <Button
                         variant={isMicOn ? "secondary" : "destructive"}
                         size="icon"
                         className="h-12 w-12 rounded-full"
                         onClick={() => setIsMicOn(!isMicOn)}
+                        aria-label={isMicOn ? "Mute microphone" : "Unmute microphone"}
                     >
                         {isMicOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
                     </Button>
@@ -252,6 +263,7 @@ export function MockRoom({ interviewId, organizerName, candidateName, startTime,
                         size="icon"
                         className="h-12 w-12 rounded-full"
                         onClick={() => setIsVideoOn(!isVideoOn)}
+                        aria-label={isVideoOn ? "Turn off camera" : "Turn on camera"}
                     >
                         {isVideoOn ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
                     </Button>
@@ -261,6 +273,7 @@ export function MockRoom({ interviewId, organizerName, candidateName, startTime,
                         className="h-12 w-12 rounded-full"
                         onClick={handleEndCall}
                         disabled={isEndingCall}
+                        aria-label="End call"
                     >
                         {isEndingCall ? <Loader2 className="h-5 w-5 animate-spin" /> : <PhoneOff className="h-5 w-5" />}
                     </Button>
@@ -272,7 +285,8 @@ export function MockRoom({ interviewId, organizerName, candidateName, startTime,
                         size="icon"
                         className="h-12 w-12 rounded-full absolute right-6"
                         onClick={() => setIsNotesOpen(!isNotesOpen)}
-                        title="Toggle Notes"
+                        aria-label={isNotesOpen ? "Close notes panel" : "Open notes panel"}
+                        aria-expanded={isNotesOpen}
                     >
                         <FileText className="h-5 w-5" />
                     </Button>

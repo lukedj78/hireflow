@@ -69,6 +69,52 @@
       "remote": "Remote",
       "onsite": "On-site",
       "hybrid": "Hybrid"
+    },
+    "agent": {
+      "title": "AI Recruiter Assistant",
+      "draftSaved": "The job posting has been saved as a draft.",
+      "errorOccurred": "An error occurred. Please try again.",
+      "inputPlaceholder": "Type your answer...",
+      "preview": "Job Post Preview",
+      "previewTitle": "Title",
+      "previewType": "Type",
+      "previewLocation": "Location",
+      "previewSalary": "Salary",
+      "previewDescription": "Description",
+      "pending": "Waiting...",
+      "pendingDescription": "Waiting for description...",
+      "userLabel": "You",
+      "assistantLabel": "AI Recruiter"
+    }
+  },
+  "CandidateDashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "getStarted": "Get started",
+    "getStartedDescription": "Complete these steps to start receiving job matches.",
+    "metrics": {
+      "applications": "Applications",
+      "applicationsDesc": "Active applications",
+      "interviews": "Interviews",
+      "interviewsDesc": "Upcoming interviews",
+      "profileViews": "Profile Views",
+      "profileViewsDesc": "Last 30 days"
+    },
+    "recommendedJobs": {
+      "title": "Recommended Jobs",
+      "description": "Jobs matching your profile will appear here.",
+      "emptyTitle": "No recommendations yet",
+      "emptyDescription": "Complete your profile and upload your CV so our AI can match you with the best opportunities.",
+      "completeProfile": "Complete profile",
+      "browseJobs": "Browse all jobs"
+    },
+    "steps": {
+      "profile": "Complete your profile",
+      "profileDesc": "Add your skills, experience, and preferences so recruiters can find you.",
+      "cv": "Upload your CV",
+      "cvDesc": "Our AI analyzes your CV to find the best job matches.",
+      "browse": "Explore open positions",
+      "browseDesc": "Search and apply to jobs that match your interests."
     }
   }
 }

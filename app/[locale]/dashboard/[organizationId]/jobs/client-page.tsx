@@ -140,12 +140,13 @@ export default function JobsClientPage({ initialJobs, organizationId, currentUse
 
       <div className="flex gap-4 items-center flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <Input
                   placeholder={t("searchPlaceholder")}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-8"
+                  aria-label={t("searchPlaceholder")}
               />
           </div>
           <Select value={status} onValueChange={(val) => setStatus(val)}>

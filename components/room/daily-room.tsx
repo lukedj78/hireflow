@@ -46,7 +46,7 @@ export function DailyRoom({ roomUrl, token, userName }: DailyRoomProps) {
                         width: "100%",
                         height: "100%",
                         border: "none",
-                        backgroundColor: "#020817"
+                        backgroundColor: "hsl(222.2 84% 4.9%)"
                     },
                     showLeaveButton: true,
                     showFullscreenButton: true,
@@ -95,7 +95,7 @@ export function DailyRoom({ roomUrl, token, userName }: DailyRoomProps) {
     }, [roomUrl, token, userName, router]);
 
     return (
-        <div className="flex h-screen w-full flex-col bg-slate-950">
+        <div className="flex h-screen w-full flex-col bg-background dark">
             <div ref={containerRef} className="flex-1 w-full h-full" />
         </div>
     );

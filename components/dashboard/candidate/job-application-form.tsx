@@ -56,7 +56,7 @@ export function JobApplicationForm({ jobSlug, jobTitle }: JobApplicationFormProp
 
   if (hasApplied) {
     return (
-      <Button disabled variant="secondary" className="w-full md:w-auto text-green-600 font-medium">
+      <Button disabled variant="secondary" className="w-full md:w-auto text-success font-medium">
         <CheckCircle2 className="h-4 w-4" />
         Applied
       </Button>

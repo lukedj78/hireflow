@@ -12,7 +12,7 @@ export function JobDescription({ description, isAiGenerated }: JobDescriptionPro
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-semibold">About the role</h2>
         {isAiGenerated && (
-          <Badge variant="secondary" className="gap-1 bg-blue-100 text-blue-700 hover:bg-blue-100/80 dark:bg-blue-900/30 dark:text-blue-400">
+          <Badge variant="secondary" className="gap-1 bg-info/10 text-info hover:bg-info/15">
             <SparkleIcon className="w-3 h-3" />
             AI Generated
           </Badge>

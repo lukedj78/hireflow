@@ -75,8 +75,9 @@ export default function SignUpPage() {
         <CardContent>
           <form onSubmit={handleSignUp} className="space-y-4">
             <div>
-              <label className="text-sm font-medium">{t('common.name')}</label>
+              <label htmlFor="signup-name" className="text-sm font-medium">{t('common.name')}</label>
               <Input
+                id="signup-name"
                 type="text"
                 placeholder={t('common.namePlaceholder')}
                 value={name}
@@ -86,8 +87,9 @@ export default function SignUpPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">{t('common.email')}</label>
+              <label htmlFor="signup-email" className="text-sm font-medium">{t('common.email')}</label>
               <Input
+                id="signup-email"
                 type="email"
                 placeholder={t('common.emailPlaceholder')}
                 value={email}
@@ -97,8 +99,9 @@ export default function SignUpPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">{t('common.password')}</label>
+              <label htmlFor="signup-password" className="text-sm font-medium">{t('common.password')}</label>
               <Input
+                id="signup-password"
                 type="password"
                 placeholder={t('common.passwordPlaceholder')}
                 value={password}

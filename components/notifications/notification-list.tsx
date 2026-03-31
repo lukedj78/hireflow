@@ -95,9 +95,9 @@ export function NotificationList({ initialNotifications, organizationId }: Notif
 
     const getIcon = (type: string) => {
         switch (type) {
-            case "interest": return <Star className="h-5 w-5 text-yellow-500" />;
-            case "email": return <Mail className="h-5 w-5 text-blue-500" />;
-            default: return <Bell className="h-5 w-5 text-gray-500" />;
+            case "interest": return <Star className="h-5 w-5 text-warning" />;
+            case "email": return <Mail className="h-5 w-5 text-info" />;
+            default: return <Bell className="h-5 w-5 text-muted-foreground" />;
         }
     };
 
@@ -151,7 +151,7 @@ export function NotificationList({ initialNotifications, organizationId }: Notif
                     notifications.map((notification) => {
                         const metadata = notification.metadata as unknown as NotificationMetadata | null;
                         return (
-                        <Card key={notification.id} className={`${!notification.readAt ? 'border-l-4 border-l-blue-500 bg-blue-50/10' : ''}`}>
+                        <Card key={notification.id} className={`${!notification.readAt ? 'border-l-4 border-l-info bg-info/5' : ''}`}>
                             <CardContent className="p-4 flex gap-4">
                                 <div className="mt-1">
                                     {getIcon(notification.type)}
@@ -181,10 +181,10 @@ export function NotificationList({ initialNotifications, organizationId }: Notif
                                 </div>
                                 <div className="flex flex-col gap-2 justify-center">
                                     {!notification.readAt && (
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            title="Mark as read"
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            aria-label="Mark as read"
                                             onClick={() => handleMarkAsRead(notification.id)}
                                         >
                                             <Check className="h-4 w-4 text-muted-foreground hover:text-foreground" />
@@ -192,10 +192,10 @@ export function NotificationList({ initialNotifications, organizationId }: Notif
                                     )}
                                     <AlertDialog>
                                         <AlertDialogTrigger render={
-                                            <Button 
-                                                variant="ghost" 
-                                                size="icon" 
-                                                title="Delete"
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                aria-label="Delete notification"
                                                 className="text-muted-foreground hover:text-destructive"
                                             >
                                                 <Trash2 className="h-4 w-4" />

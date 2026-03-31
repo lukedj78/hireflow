@@ -69,6 +69,52 @@
       "remote": "Remoto",
       "onsite": "In sede",
       "hybrid": "Ibrido"
+    },
+    "agent": {
+      "title": "Assistente AI Recruiter",
+      "draftSaved": "Ottimo! L'annuncio è stato salvato come bozza.",
+      "errorOccurred": "Si è verificato un errore. Riprova.",
+      "inputPlaceholder": "Scrivi la tua risposta...",
+      "preview": "Anteprima Job Post",
+      "previewTitle": "Titolo",
+      "previewType": "Tipo",
+      "previewLocation": "Luogo",
+      "previewSalary": "Salario",
+      "previewDescription": "Descrizione",
+      "pending": "In attesa...",
+      "pendingDescription": "In attesa di descrizione...",
+      "userLabel": "Tu",
+      "assistantLabel": "AI Recruiter"
+    }
+  },
+  "CandidateDashboard": {
+    "title": "Dashboard",
+    "welcome": "Bentornato",
+    "getStarted": "Inizia",
+    "getStartedDescription": "Completa questi passaggi per ricevere le migliori offerte di lavoro.",
+    "metrics": {
+      "applications": "Candidature",
+      "applicationsDesc": "Candidature attive",
+      "interviews": "Colloqui",
+      "interviewsDesc": "Colloqui in programma",
+      "profileViews": "Visualizzazioni profilo",
+      "profileViewsDesc": "Ultimi 30 giorni"
+    },
+    "recommendedJobs": {
+      "title": "Lavori consigliati",
+      "description": "Qui appariranno i lavori che corrispondono al tuo profilo.",
+      "emptyTitle": "Nessuna raccomandazione ancora",
+      "emptyDescription": "Completa il tuo profilo e carica il CV per permettere alla nostra AI di trovarti le migliori opportunità.",
+      "completeProfile": "Completa il profilo",
+      "browseJobs": "Esplora tutti i lavori"
+    },
+    "steps": {
+      "profile": "Completa il profilo",
+      "profileDesc": "Aggiungi competenze, esperienza e preferenze per farti trovare dai recruiter.",
+      "cv": "Carica il CV",
+      "cvDesc": "La nostra AI analizza il tuo CV per trovare i lavori più adatti.",
+      "browse": "Esplora le posizioni aperte",
+      "browseDesc": "Cerca e candidati ai lavori che ti interessano."
     }
   }
 }

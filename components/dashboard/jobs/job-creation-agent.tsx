@@ -14,6 +14,7 @@ import { OptionSelector } from "./option-selector";
 import { User, Bot, Send, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 interface Message {
   id: number;
@@ -23,6 +24,7 @@ interface Message {
 }
 
 export default function JobCreationAgent({ organizationId }: { organizationId: string }) {
+  const t = useTranslations("Jobs.agent");
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState<JobDraft>({});
   const [inputValue, setInputValue] = useState("");
@@ -82,8 +84,8 @@ export default function JobCreationAgent({ organizationId }: { organizationId: s
             role: "assistant",
             display: (
                 <div className="flex flex-col gap-2">
-                    <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-lg text-green-800 dark:text-green-200">
-                        Ottimo! L&apos;annuncio è stato salvato come bozza.
+                    <div className="bg-success/10 p-3 rounded-lg text-success">
+                        {t("draftSaved")}
                     </div>
                 </div>
             ),
@@ -124,7 +126,7 @@ export default function JobCreationAgent({ organizationId }: { organizationId: s
       setMessages(curr => [...curr, {
         id: Date.now() + 2,
         role: "assistant",
-        display: <div className="text-destructive bg-destructive/10 px-4 py-2 rounded-lg">Si è verificato un errore. Riprova.</div>,
+        display: <div className="text-destructive bg-destructive/10 px-4 py-2 rounded-lg">{t("errorOccurred")}</div>,
         content: ""
       }]);
     } finally {
@@ -134,49 +136,49 @@ export default function JobCreationAgent({ organizationId }: { organizationId: s
 
   return (
     <AiChatProvider value={{ sendMessage: (text) => handleSendMessage(text) }}>
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
+       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-140px)]">
           {/* Chat Area */}
-          <Card className="md:col-span-2 flex flex-col h-full border shadow-sm overflow-hidden">
+          <Card className="lg:col-span-2 flex flex-col h-full border shadow-sm overflow-hidden">
              <CardHeader className="bg-muted/30 pb-4">
                 <CardTitle className="flex items-center gap-2 text-lg">
-                   <Sparkles className="w-5 h-5 text-indigo-500" />
-                   AI Recruiter Assistant
+                   <Sparkles className="w-5 h-5 text-primary" />
+                   {t("title")}
                 </CardTitle>
              </CardHeader>
              
              <div className="flex-1 overflow-y-auto p-4 space-y-4" ref={scrollRef}>
                 {messages.map((msg) => (
-                  <div 
-                    key={msg.id} 
+                  <div
+                    key={msg.id}
                     className={cn(
-                      "flex gap-3 max-w-[85%]",
+                      "flex gap-3 max-w-[85%] animate-fade-in-up",
                       msg.role === "user" ? "ml-auto flex-row-reverse" : "mr-auto"
                     )}
                   >
                     <div className={cn(
                       "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                      msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-indigo-100 text-indigo-600"
+                      msg.role === "user" ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary"
                     )}>
                       {msg.role === "user" ? <User size={14} /> : <Bot size={14} />}
                     </div>
                     <div className="flex flex-col gap-1">
                       <span className="text-xs text-muted-foreground px-1">
-                        {msg.role === "user" ? "You" : "AI Recruiter"}
+                        {msg.role === "user" ? t("userLabel") : t("assistantLabel")}
                       </span>
                       {msg.display}
                     </div>
                   </div>
                 ))}
                 {isPending && (
-                  <div className="flex gap-3 max-w-[80%] mr-auto">
-                     <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                  <div className="flex gap-3 max-w-[80%] mr-auto animate-fade-in">
+                     <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
                         <Bot size={14} />
                      </div>
-                     <div className="flex items-center h-full pt-2">
-                        <div className="flex space-x-1">
-                          <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                          <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                          <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+                     <div className="flex items-center h-full pt-2" aria-label="AI is thinking" role="status">
+                        <div className="flex space-x-1.5">
+                          <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-thinking"></div>
+                          <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-thinking [animation-delay:0.2s]"></div>
+                          <div className="w-1.5 h-1.5 bg-primary/60 rounded-full animate-thinking [animation-delay:0.4s]"></div>
                         </div>
                      </div>
                   </div>
@@ -191,14 +193,15 @@ export default function JobCreationAgent({ organizationId }: { organizationId: s
                   }}
                   className="flex gap-2"
                 >
-                  <Input 
+                  <Input
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
-                    placeholder="Scrivi la tua risposta..."
+                    placeholder={t("inputPlaceholder")}
                     disabled={isPending}
                     className="flex-1"
+                    aria-label="Your message to the AI assistant"
                   />
-                  <Button type="submit" disabled={isPending || !inputValue.trim()}>
+                  <Button type="submit" disabled={isPending || !inputValue.trim()} aria-label="Send message">
                     <Send size={16} />
                   </Button>
                 </form>
@@ -206,18 +209,18 @@ export default function JobCreationAgent({ organizationId }: { organizationId: s
           </Card>
 
           {/* Draft Preview */}
-          <Card className="hidden md:flex flex-col h-full bg-muted/10 border shadow-sm">
+          <Card className="hidden lg:flex flex-col h-full bg-muted/10 border shadow-sm">
              <CardHeader>
-                <CardTitle className="text-base">Anteprima Job Post</CardTitle>
+                <CardTitle className="text-base">{t("preview")}</CardTitle>
              </CardHeader>
              <CardContent className="flex-1 overflow-y-auto space-y-6">
                 
                 <div className="space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Titolo</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("previewTitle")}</p>
                   {draft.title ? (
                     <p className="font-semibold text-lg">{draft.title}</p>
                   ) : (
-                    <p className="text-sm text-muted-foreground italic">In attesa...</p>
+                    <p className="text-sm text-muted-foreground italic">{t("pending")}</p>
                   )}
                 </div>
 
@@ -225,7 +228,7 @@ export default function JobCreationAgent({ organizationId }: { organizationId: s
 
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Tipo</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("previewType")}</p>
                       {draft.type ? (
                         <Badge variant="secondary">{draft.type}</Badge>
                       ) : (
@@ -233,25 +236,25 @@ export default function JobCreationAgent({ organizationId }: { organizationId: s
                       )}
                    </div>
                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Luogo</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("previewLocation")}</p>
                       <p className="text-sm">{draft.location || <span className="text-muted-foreground italic">...</span>}</p>
                    </div>
                 </div>
 
                 <div className="space-y-1">
-                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Salario</p>
+                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("previewSalary")}</p>
                    <p className="text-sm">{draft.salaryRange || <span className="text-muted-foreground italic">...</span>}</p>
                 </div>
 
                 <Separator />
 
                 <div className="space-y-2">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Descrizione</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{t("previewDescription")}</p>
                   <ScrollArea className="h-[200px] w-full rounded-md border p-3 bg-background text-sm">
                     {draft.description ? (
                       <div className="whitespace-pre-wrap">{draft.description}</div>
                     ) : (
-                      <span className="text-muted-foreground italic">In attesa di descrizione...</span>
+                      <span className="text-muted-foreground italic">{t("pendingDescription")}</span>
                     )}
                   </ScrollArea>
                 </div>

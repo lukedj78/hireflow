@@ -121,12 +121,12 @@ export default async function OrganizationDashboardPage({
   return (
     <PageLayout>
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+        <div className="flex items-center justify-between space-y-2 animate-fade-in">
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         </div>
         {/* Key Metrics Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="animate-fade-in-up stagger-1">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Jobs</CardTitle>
               <Briefcase className="h-4 w-4 text-muted-foreground" />
@@ -138,7 +138,7 @@ export default async function OrganizationDashboardPage({
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="animate-fade-in-up stagger-2">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
               <FileText className="h-4 w-4 text-muted-foreground" />
@@ -150,7 +150,7 @@ export default async function OrganizationDashboardPage({
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="animate-fade-in-up stagger-3">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Interviews</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
@@ -162,7 +162,7 @@ export default async function OrganizationDashboardPage({
               </p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="animate-fade-in-up stagger-4">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Hired</CardTitle>
               <CheckCircle className="h-4 w-4 text-muted-foreground" />
@@ -178,7 +178,7 @@ export default async function OrganizationDashboardPage({
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           {/* Pipeline Overview Chart */}
-          <Card className="col-span-4">
+          <Card className="col-span-4 animate-fade-in-up stagger-5">
             <CardHeader>
               <CardTitle>Pipeline Overview</CardTitle>
               <CardDescription>
@@ -191,7 +191,7 @@ export default async function OrganizationDashboardPage({
           </Card>
 
           {/* Recent Activity List */}
-          <Card className="col-span-3">
+          <Card className="col-span-3 animate-fade-in-up stagger-6">
             <CardHeader>
               <CardTitle>Recent Applications</CardTitle>
               <CardDescription>

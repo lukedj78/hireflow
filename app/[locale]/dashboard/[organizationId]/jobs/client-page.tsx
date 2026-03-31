@@ -149,9 +149,9 @@ export default function JobsClientPage({ initialJobs, organizationId, currentUse
                   aria-label={t("searchPlaceholder")}
               />
           </div>
-          <Select value={status} onValueChange={(val) => setStatus(val)}>
+          <Select value={status} onValueChange={(val) => setStatus(val)} defaultValue="all">
               <SelectTrigger className="w-[180px]">
-                  <SelectValue />
+                  <SelectValue placeholder={t("allStatuses")} />
               </SelectTrigger>
               <SelectContent>
                   <SelectItem value="all">{t("allStatuses")}</SelectItem>
@@ -160,9 +160,9 @@ export default function JobsClientPage({ initialJobs, organizationId, currentUse
                   <SelectItem value="closed">{t("status.closed")}</SelectItem>
               </SelectContent>
           </Select>
-          <Select value={type} onValueChange={(val) => setType(val)}>
+          <Select value={type} onValueChange={(val) => setType(val)} defaultValue="all">
               <SelectTrigger className="w-[180px]">
-                  <SelectValue />
+                  <SelectValue placeholder={t("allTypes")} />
               </SelectTrigger>
               <SelectContent>
                   <SelectItem value="all">{t("allTypes")}</SelectItem>
